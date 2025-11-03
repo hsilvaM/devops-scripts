@@ -32,7 +32,7 @@ open_port() {
     local protocol=$1
     local port=$2
     local description=$3
-    local full_port="${protocol}/${port}"
+    local full_port="${port}/${protocol}"
     
     if firewall-cmd --list-ports | grep -q "${full_port}"; then
         log_check "Puerto '${full_port}' ($description) ya esta abierto"
