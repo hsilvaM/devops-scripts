@@ -6,8 +6,8 @@ WORKDIR /app
 # Copiar package.json y package-lock.json primero para cachear layers
 COPY my-app/package*.json ./
 
-# Instalar dependencias (incluye dev dependencies necesarias para build)
-RUN npm ci
+# Instalar TODAS las dependencias (incluye dev dependencies necesarias)
+RUN npm install
 
 # Copiar el resto de la aplicacion
 COPY my-app/ .
@@ -16,5 +16,8 @@ COPY my-app/ .
 RUN npm run build
 
 EXPOSE 3000
+
+# Usar NODE_ENV production pero mantener npm
+ENV NODE_ENV=production
 
 CMD ["npm", "run", "start"]

@@ -11,6 +11,8 @@ services:
       - "3002:3000"
     environment:
       - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
       - NEXT_PUBLIC_API_URL=http://nestjs:3001
     networks:
       - apps-net
