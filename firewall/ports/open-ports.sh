@@ -65,11 +65,18 @@ main() {
             continue
         fi
         
-        # Parsear formato: PROTOCOL:PORT:DESCRIPTION
-        IFS=':' read -r protocol port description <<< "$line"
-        
-        if [ -n "$protocol" ] && [ -n "$port" ]; then
-            open_port "$protocol" "$port" "$description"
+        # Parsear formato: PROTOCOL:PORT|DESCRIPTION
+        # Usar | como separador entre puerto y descripcion
+        if [[ "$line" =~ ^([^:]+):([^|]+)\|(.*)$ ]]; then
+            protocol="${BASH_REMATCH[1]}"
+            port="${BASH_REMATCH[2]}"
+            description="${BASH_REMATCH[3]}"
+            
+            if [ -n "$protocol" ] && [ -n "$port" ]; then
+                open_port "$protocol" "$port" "$description"
+            else
+                log_warn "Linea mal formateada: $line"
+            fi
         else
             log_warn "Linea mal formateada: $line"
         fi

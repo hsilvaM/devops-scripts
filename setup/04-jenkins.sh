@@ -129,7 +129,7 @@ install_jenkins() {
     
     # Descargar la imagen de Jenkins
     log_download "Descargando imagen oficial de Jenkins LTS..."
-    docker-compose pull jenkins
+    docker compose pull jenkins
     
     if [ $? -ne 0 ]; then
         log_error "Error al descargar imagen de Jenkins"
@@ -138,7 +138,7 @@ install_jenkins() {
     
     # Iniciar Jenkins
     log_install "Iniciando contenedor de Jenkins..."
-    docker-compose up -d
+    docker compose up -d
     
     if [ $? -ne 0 ]; then
         log_error "Error al iniciar Jenkins"
@@ -180,10 +180,10 @@ main() {
         log_info "URL: http://localhost:8080/jenkins"
         log_info ""
         log_check "Para reiniciar Jenkins, ejecuta:"
-        log_info "cd ${JENKINS_DIR} && docker-compose restart"
+        log_info "cd ${JENKINS_DIR} && docker compose restart"
         log_info ""
         log_check "Para detener Jenkins, ejecuta:"
-        log_info "cd ${JENKINS_DIR} && docker-compose down"
+        log_info "cd ${JENKINS_DIR} && docker compose down"
         return 0
     fi
     
@@ -198,7 +198,7 @@ main() {
         create_docker_compose_file
         
         log_install "Iniciando Jenkins con datos existentes..."
-        docker-compose up -d
+        docker compose up -d
         
         if jenkins_is_running; then
             log_success "Jenkins iniciado exitosamente con datos existentes"
