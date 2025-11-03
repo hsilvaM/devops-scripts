@@ -1,4 +1,22 @@
 version: '3.8'
 
-# Configuracion de aplicacion NextJS
+services:
+  nextjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nextjs-app
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://nestjs:3001
+    networks:
+      - apps-net
 
+networks:
+  apps-net:
+    driver: bridge
+    external: true
+    name: apps-net

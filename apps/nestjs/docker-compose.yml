@@ -1,4 +1,22 @@
 version: '3.8'
 
-# Configuracion de aplicacion NestJS
+services:
+  nestjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nestjs-app
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    networks:
+      - apps-net
 
+networks:
+  apps-net:
+    driver: bridge
+    external: true
+    name: apps-net

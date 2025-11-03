@@ -102,3 +102,25 @@ database/oracle/exports/
 # Archivos de deployment temporal
 deploy/.tmp/
 deploy/backups/
+
+# Aplicaciones (excluir solo archivos generados)
+apps/*/node_modules/
+apps/*/.next/
+apps/*/dist/
+apps/*/build/
+apps/*/coverage/
+apps/*/.pnpm-store/
+apps/*/*/node_modules/
+apps/*/*/.next/
+apps/*/*/dist/
+apps/*/*/build/
+apps/*/*/coverage/
+apps/*/*/.pnpm-store/
+
+# Lock files de aplicaciones
+apps/*/package-lock.json
+apps/*/pnpm-lock.yaml
+apps/*/yarn.lock
+apps/*/*/package-lock.json
+apps/*/*/pnpm-lock.yaml
+apps/*/*/yarn.lock
