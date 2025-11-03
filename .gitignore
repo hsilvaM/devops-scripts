@@ -117,10 +117,10 @@ apps/*/*/build/
 apps/*/*/coverage/
 apps/*/*/.pnpm-store/
 
-# Lock files de aplicaciones
-apps/*/package-lock.json
-apps/*/pnpm-lock.yaml
-apps/*/yarn.lock
-apps/*/*/package-lock.json
-apps/*/*/pnpm-lock.yaml
-apps/*/*/yarn.lock
+# Lock files de aplicaciones (ahora incluimos para builds reproducibles)
+# apps/*/package-lock.json
+# apps/*/pnpm-lock.yaml
+# apps/*/yarn.lock
+# apps/*/*/package-lock.json
+# apps/*/*/pnpm-lock.yaml
+# apps/*/*/yarn.lock
