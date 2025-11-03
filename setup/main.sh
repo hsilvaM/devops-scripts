@@ -67,6 +67,18 @@ main() {
     log_info "Paso 3: Verificando/Instalando Oracle Client..."
     run_setup_script "${SCRIPT_DIR}/03-oracle-client.sh"
     
+    log_separator
+    
+    # Paso 4: Instalar Jenkins en Docker
+    log_info "Paso 4: Instalando Jenkins en Docker..."
+    run_setup_script "${SCRIPT_DIR}/04-jenkins.sh"
+    
+    log_separator
+    
+    # Paso 5: Configurar Firewall
+    log_info "Paso 5: Configurando Firewall..."
+    run_setup_script "${SCRIPT_DIR}/05-firewall.sh"
+    
     log_info ""
     
     # Paso final: Verificar prerrequisitos finales
