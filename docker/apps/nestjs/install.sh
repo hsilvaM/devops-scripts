@@ -2,8 +2,8 @@
 # Script de instalacion de NestJS en Docker
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_DIR="${SCRIPT_DIR}/../../config"
-NESTJS_DIR="${SCRIPT_DIR}/../../apps/nestjs"
+CONFIG_DIR="${SCRIPT_DIR}/../../../config"
+NESTJS_DIR="${SCRIPT_DIR}/../../../apps/nestjs"
 
 # Cargar funciones comunes
 if [ -f "${CONFIG_DIR}/common.sh" ]; then

@@ -2,8 +2,8 @@
 # Script de instalacion de NextJS en Docker
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_DIR="${SCRIPT_DIR}/../../config"
-NEXTJS_DIR="${SCRIPT_DIR}/../../apps/nextjs"
+CONFIG_DIR="${SCRIPT_DIR}/../../../config"
+NEXTJS_DIR="${SCRIPT_DIR}/../../../apps/nextjs"
 
 # Cargar funciones comunes
 if [ -f "${CONFIG_DIR}/common.sh" ]; then
