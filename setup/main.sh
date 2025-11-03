@@ -91,6 +91,18 @@ main() {
     log_info "Paso 7: Instalando Grafana..."
     run_setup_script "${SCRIPT_DIR}/../docker/grafana/install.sh"
     
+    log_separator
+    
+    # Paso 8: Desplegar NestJS
+    log_info "Paso 8: Desplegando NestJS..."
+    run_setup_script "${SCRIPT_DIR}/../docker/apps/nestjs/install.sh"
+    
+    log_separator
+    
+    # Paso 9: Desplegar NextJS
+    log_info "Paso 9: Desplegando NextJS..."
+    run_setup_script "${SCRIPT_DIR}/../docker/apps/nextjs/install.sh"
+    
     log_info ""
     
     # Paso final: Verificar prerrequisitos finales
@@ -99,6 +111,16 @@ main() {
     if run_setup_script "${SCRIPT_DIR}/01-prerequisites.sh"; then
         log_info ""
         log_section "Configuracion completada exitosamente"
+        log_info ""
+        log_info "=== URLs de Acceso ==="
+        log_info "Jenkins:       http://localhost:8080/jenkins"
+        log_info "Prometheus:    http://localhost:9090"
+        log_info "Grafana:       http://localhost:3000 (admin/admin)"
+        log_info "NextJS App:    http://localhost:3002"
+        log_info "NestJS API:    http://localhost:3001"
+        log_info ""
+        log_check "Verificar servicios corriendo:"
+        log_info "docker ps"
         return 0
     else
         log_error ""
