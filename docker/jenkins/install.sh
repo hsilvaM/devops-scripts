@@ -2,8 +2,8 @@
 # Script de instalacion de Jenkins en Docker
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_DIR="${SCRIPT_DIR}/../config"
-JENKINS_DIR="${SCRIPT_DIR}/../jenkins"
+CONFIG_DIR="${SCRIPT_DIR}/../../config"
+JENKINS_DIR="${SCRIPT_DIR}/../../jenkins"
 
 # Cargar funciones comunes
 if [ -f "${CONFIG_DIR}/common.sh" ]; then

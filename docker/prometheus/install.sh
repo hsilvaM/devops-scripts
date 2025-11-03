@@ -2,8 +2,8 @@
 # Script de instalacion de Prometheus en Docker
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_DIR="${SCRIPT_DIR}/../config"
-PROMETHEUS_DIR="${SCRIPT_DIR}/../monitoring/prometheus"
+CONFIG_DIR="${SCRIPT_DIR}/../../config"
+PROMETHEUS_DIR="${SCRIPT_DIR}/../../monitoring/prometheus"
 
 # Cargar funciones comunes
 if [ -f "${CONFIG_DIR}/common.sh" ]; then

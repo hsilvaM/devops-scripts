@@ -2,8 +2,8 @@
 # Script de instalacion de Grafana en Docker
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_DIR="${SCRIPT_DIR}/../config"
-GRAFANA_DIR="${SCRIPT_DIR}/../monitoring/grafana"
+CONFIG_DIR="${SCRIPT_DIR}/../../config"
+GRAFANA_DIR="${SCRIPT_DIR}/../../monitoring/grafana"
 
 # Cargar funciones comunes
 if [ -f "${CONFIG_DIR}/common.sh" ]; then

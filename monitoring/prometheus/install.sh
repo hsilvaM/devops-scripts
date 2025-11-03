@@ -5,8 +5,8 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Llamar al script principal de setup
-if [ -f "${SCRIPT_DIR}/../../setup/06-prometheus.sh" ]; then
-    bash "${SCRIPT_DIR}/../../setup/06-prometheus.sh" "$@"
+if [ -f "${SCRIPT_DIR}/../../docker/prometheus/install.sh" ]; then
+    bash "${SCRIPT_DIR}/../../docker/prometheus/install.sh" "$@"
 else
     echo "Error: No se encuentra el script principal de instalacion"
     exit 1

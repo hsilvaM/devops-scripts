@@ -71,7 +71,7 @@ main() {
     
     # Paso 4: Instalar Jenkins en Docker
     log_info "Paso 4: Instalando Jenkins en Docker..."
-    run_setup_script "${SCRIPT_DIR}/04-jenkins.sh"
+    run_setup_script "${SCRIPT_DIR}/../docker/jenkins/install.sh"
     
     log_separator
     
@@ -83,13 +83,13 @@ main() {
     
     # Paso 6: Instalar Prometheus
     log_info "Paso 6: Instalando Prometheus..."
-    run_setup_script "${SCRIPT_DIR}/06-prometheus.sh"
+    run_setup_script "${SCRIPT_DIR}/../docker/prometheus/install.sh"
     
     log_separator
     
     # Paso 7: Instalar Grafana
     log_info "Paso 7: Instalando Grafana..."
-    run_setup_script "${SCRIPT_DIR}/07-grafana.sh"
+    run_setup_script "${SCRIPT_DIR}/../docker/grafana/install.sh"
     
     log_info ""
     
