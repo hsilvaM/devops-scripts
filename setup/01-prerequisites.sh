@@ -34,6 +34,66 @@ docker_service_running() {
     return 1
 }
 
+# Funcion para verificar si Git esta instalado
+git_is_installed() {
+    if command_exists git; then
+        GIT_VERSION=$(git --version 2>/dev/null)
+        if [ $? -eq 0 ]; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# Funcion para instalar Git
+install_git() {
+    log_info "Instalando Git..."
+    
+    # Verificar gestor de paquetes disponible
+    if command_exists dnf; then
+        PACKAGE_MANAGER="dnf"
+    elif command_exists yum; then
+        PACKAGE_MANAGER="yum"
+    else
+        log_error "No se encuentra dnf ni yum. Este script requiere RHEL/AlmaLinux/CentOS"
+        exit 1
+    fi
+    
+    log_info "Usando $PACKAGE_MANAGER para instalar Git..."
+    
+    $PACKAGE_MANAGER install -y git
+    
+    if [ $? -ne 0 ]; then
+        log_error "Error al instalar Git"
+        return 1
+    fi
+    
+    return 0
+}
+
+# Funcion para verificar Git
+check_git() {
+    log_info "Verificando Git..."
+    
+    if git_is_installed; then
+        GIT_VERSION=$(git --version)
+        log_info "Git esta instalado: $GIT_VERSION"
+        return 0
+    else
+        log_warn "Git no esta instalado"
+        log_info "Instalando Git automaticamente..."
+        
+        if install_git; then
+            GIT_VERSION=$(git --version)
+            log_info "Git instalado exitosamente: $GIT_VERSION"
+            return 0
+        else
+            log_error "No se pudo instalar Git"
+            return 1
+        fi
+    fi
+}
+
 # Funcion para verificar Docker
 check_docker() {
     log_info "Verificando Docker..."
@@ -71,20 +131,36 @@ check_docker() {
 main() {
     log_info "=== Verificacion de Pre-requisitos ==="
     
+    # Verificar Git
+    GIT_OK=false
+    if check_git; then
+        GIT_OK=true
+    fi
+    
+    log_info ""
+    
     # Verificar Docker
     DOCKER_OK=false
     if check_docker; then
         DOCKER_OK=true
     fi
     
+    log_info ""
     log_info "=== Resumen de Pre-requisitos ==="
+    
+    if [ "$GIT_OK" = true ]; then
+        log_info "Git: OK"
+    else
+        log_error "Git: FALTA"
+    fi
+    
     if [ "$DOCKER_OK" = true ]; then
         log_info "Docker: OK"
     else
         log_error "Docker: FALTA"
     fi
     
-    if [ "$DOCKER_OK" = false ]; then
+    if [ "$GIT_OK" = false ] || [ "$DOCKER_OK" = false ]; then
         log_error "Algunos pre-requisitos no estan cumplidos"
         exit 1
     fi
