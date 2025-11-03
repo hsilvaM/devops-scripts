@@ -17,7 +17,12 @@ services:
       - JENKINS_OPTS=--prefix=/jenkins
     networks:
       - jenkins-net
+      - monitoring-net
 
 networks:
   jenkins-net:
     driver: bridge
+  monitoring-net:
+    driver: bridge
+    external: true
+    name: monitoring-net
