@@ -36,7 +36,7 @@ docker_service_running() {
 
 # Funcion para instalar Docker
 install_docker() {
-    log_info "Instalando Docker..."
+    log_install "Instalando Docker..."
     
     # Verificar gestor de paquetes disponible
     if command_exists dnf; then
@@ -48,19 +48,19 @@ install_docker() {
         exit 1
     fi
     
-    log_info "Usando $PACKAGE_MANAGER como gestor de paquetes"
+    log_config "Usando $PACKAGE_MANAGER como gestor de paquetes"
     
     # Actualizar lista de paquetes
-    log_info "Actualizando lista de paquetes..."
+    log_progress "Actualizando lista de paquetes..."
     $PACKAGE_MANAGER makecache -y
     
     # Instalar dependencias necesarias
-    log_info "Instalando dependencias..."
+    log_install "Instalando dependencias..."
     $PACKAGE_MANAGER install -y yum-utils device-mapper-persistent-data lvm2
     
     # Agregar repositorio de Docker (si no existe)
     if [ ! -f /etc/yum.repos.d/docker-ce.repo ]; then
-        log_info "Agregando repositorio de Docker..."
+        log_config "Agregando repositorio de Docker..."
         if [ "$PACKAGE_MANAGER" = "dnf" ]; then
             dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
         else
@@ -73,7 +73,7 @@ install_docker() {
     fi
     
     # Instalar Docker CE
-    log_info "Instalando Docker CE..."
+    log_install "Instalando Docker CE..."
     $PACKAGE_MANAGER install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     
     if [ $? -ne 0 ]; then
@@ -84,7 +84,7 @@ install_docker() {
 
 # Funcion para iniciar Docker
 start_docker() {
-    log_info "Iniciando servicio Docker..."
+    log_config "Iniciando servicio Docker..."
     systemctl start docker
     
     if [ $? -ne 0 ]; then
@@ -92,7 +92,7 @@ start_docker() {
         exit 1
     fi
     
-    log_info "Habilitando Docker para inicio automatico..."
+    log_config "Habilitando Docker para inicio automatico..."
     systemctl enable docker
     
     if [ $? -ne 0 ]; then
@@ -102,28 +102,28 @@ start_docker() {
 
 # Funcion principal
 main() {
-    log_info "=== Instalacion de Docker ==="
+    log_section "Instalacion de Docker"
     
     # Verificar si Docker ya esta instalado
     if docker_is_installed; then
         DOCKER_VERSION=$(docker --version)
-        log_info "Docker ya esta instalado: $DOCKER_VERSION"
+        log_success "Docker ya esta instalado: $DOCKER_VERSION"
         
         # Verificar si el servicio esta corriendo
         if docker_service_running; then
-            log_info "Servicio Docker ya esta corriendo"
+            log_success "Servicio Docker ya esta corriendo"
         else
             log_info "Servicio Docker no esta corriendo, iniciando..."
             start_docker
         fi
         
-        log_info "=== Instalacion de Docker completada ==="
+        log_success "Instalacion de Docker completada"
         log_info "Ejecuta ./setup/01-prerequisites.sh para verificar la instalacion"
         return 0
     fi
     
     # Docker no esta instalado, proceder con la instalacion
-    log_info "Docker no esta instalado. Procediendo con la instalacion..."
+    log_install "Docker no esta instalado. Procediendo con la instalacion..."
     
     install_docker
     
@@ -139,7 +139,7 @@ main() {
         exit 1
     fi
     
-    log_info "=== Instalacion de Docker completada exitosamente ==="
+    log_success "Instalacion de Docker completada exitosamente"
     log_info "Ejecuta ./setup/01-prerequisites.sh para verificar la instalacion"
 }
 

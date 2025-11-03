@@ -47,7 +47,7 @@ git_is_installed() {
 
 # Funcion para instalar Git
 install_git() {
-    log_info "Instalando Git..."
+    log_install "Instalando Git..."
     
     # Verificar gestor de paquetes disponible
     if command_exists dnf; then
@@ -59,7 +59,7 @@ install_git() {
         exit 1
     fi
     
-    log_info "Usando $PACKAGE_MANAGER para instalar Git..."
+    log_config "Usando $PACKAGE_MANAGER para instalar Git..."
     
     $PACKAGE_MANAGER install -y git
     
@@ -73,19 +73,19 @@ install_git() {
 
 # Funcion para verificar Git
 check_git() {
-    log_info "Verificando Git..."
+    log_check "Verificando Git..."
     
     if git_is_installed; then
         GIT_VERSION=$(git --version)
-        log_info "Git esta instalado: $GIT_VERSION"
+        log_success "Git esta instalado: $GIT_VERSION"
         return 0
     else
         log_warn "Git no esta instalado"
-        log_info "Instalando Git automaticamente..."
+        log_install "Instalando Git automaticamente..."
         
         if install_git; then
             GIT_VERSION=$(git --version)
-            log_info "Git instalado exitosamente: $GIT_VERSION"
+            log_success "Git instalado exitosamente: $GIT_VERSION"
             return 0
         else
             log_error "No se pudo instalar Git"
@@ -96,19 +96,19 @@ check_git() {
 
 # Funcion para verificar Docker
 check_docker() {
-    log_info "Verificando Docker..."
+    log_check "Verificando Docker..."
     
     if docker_is_installed; then
         DOCKER_VERSION=$(docker --version)
-        log_info "Docker esta instalado: $DOCKER_VERSION"
+        log_success "Docker esta instalado: $DOCKER_VERSION"
         
         if docker_service_running; then
-            log_info "Servicio Docker esta corriendo"
+            log_success "Servicio Docker esta corriendo"
             
             # Verificar que Docker funcione correctamente
-            log_info "Ejecutando prueba de Docker..."
+            log_check "Ejecutando prueba de Docker..."
             if docker run --rm hello-world >/dev/null 2>&1; then
-                log_info "Docker funciona correctamente"
+                log_success "Docker funciona correctamente"
                 return 0
             else
                 log_warn "Docker esta instalado pero no pudo ejecutar contenedores"
@@ -129,7 +129,7 @@ check_docker() {
 
 # Funcion principal
 main() {
-    log_info "=== Verificacion de Pre-requisitos ==="
+    log_section "Verificacion de Pre-requisitos"
     
     # Verificar Git
     GIT_OK=false
@@ -146,16 +146,16 @@ main() {
     fi
     
     log_info ""
-    log_info "=== Resumen de Pre-requisitos ==="
+    log_section "Resumen de Pre-requisitos"
     
     if [ "$GIT_OK" = true ]; then
-        log_info "Git: OK"
+        log_success "Git: OK"
     else
         log_error "Git: FALTA"
     fi
     
     if [ "$DOCKER_OK" = true ]; then
-        log_info "Docker: OK"
+        log_success "Docker: OK"
     else
         log_error "Docker: FALTA"
     fi
@@ -165,7 +165,7 @@ main() {
         exit 1
     fi
     
-    log_info "Todos los pre-requisitos estan cumplidos"
+    log_success "Todos los pre-requisitos estan cumplidos"
     return 0
 }
 

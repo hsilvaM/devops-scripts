@@ -31,39 +31,37 @@ run_setup_script() {
         return 0
     fi
     
-    log_info "=== Ejecutando: $script_name ==="
+    log_progress "Ejecutando: $script_name"
     
     if bash "$script_path"; then
-        log_info "=== $script_name completado exitosamente ==="
+        log_success "$script_name completado exitosamente"
         return 0
     else
-        log_error "=== $script_name fallo ==="
+        log_error "$script_name fallo"
         return 1
     fi
 }
 
 # Funcion principal
 main() {
-    log_info "=========================================="
-    log_info "  Script de Configuracion del Sistema"
-    log_info "=========================================="
+    log_section "Script de Configuracion del Sistema"
     log_info ""
     
     # Paso 1: Verificar prerrequisitos iniciales
     log_info "Paso 1: Verificando prerrequisitos iniciales..."
     if run_setup_script "${SCRIPT_DIR}/01-prerequisites.sh"; then
-        log_info "Todos los prerrequisitos cumplidos"
+        log_success "Todos los prerrequisitos cumplidos"
     else
         log_info "Algunos prerrequisitos faltan, continuando con instalacion..."
     fi
     
-    log_info ""
+    log_separator
     
     # Paso 2: Instalar Docker (si no esta instalado)
     log_info "Paso 2: Verificando/Instalando Docker..."
     run_setup_script "${SCRIPT_DIR}/02-docker.sh"
     
-    log_info ""
+    log_separator
     
     # Paso 3: Instalar Oracle Client (si existe el script)
     log_info "Paso 3: Verificando/Instalando Oracle Client..."
@@ -72,15 +70,11 @@ main() {
     log_info ""
     
     # Paso final: Verificar prerrequisitos finales
-    log_info "=========================================="
-    log_info "Verificacion final de prerrequisitos..."
-    log_info "=========================================="
+    log_section "Verificacion final de prerrequisitos"
     
     if run_setup_script "${SCRIPT_DIR}/01-prerequisites.sh"; then
         log_info ""
-        log_info "=========================================="
-        log_info "  Configuracion completada exitosamente"
-        log_info "=========================================="
+        log_section "Configuracion completada exitosamente"
         return 0
     else
         log_error ""
