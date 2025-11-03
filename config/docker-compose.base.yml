@@ -1,0 +1,15 @@
+version: '3.8'
+
+# Configuracion base para docker-compose
+# Este archivo puede ser extendido por otros docker-compose.yml
+
+networks:
+  app-network:
+    driver: bridge
+    name: ${DOCKER_NETWORK_NAME:-app-network}
+
+volumes:
+  jenkins-data:
+  prometheus-data:
+  grafana-data:
+

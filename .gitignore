@@ -1,0 +1,104 @@
+# Archivos de IA y herramientas de desarrollo
+.cursor/
+.cursorrules
+CLAUDE.md
+.claude/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Variables de entorno (permitir ejemplos)
+.env
+.env.local
+.env.*.local
+config/.env
+!config/.env.example
+!config/env.example
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Archivos temporales
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Archivos de backup de base de datos
+database/backup/*.dmp
+database/backup/*.sql.gz
+database/backup/*.sql.tar
+database/backup/*.dump
+
+# Archivos de Docker (volumenes y datos)
+docker/data/
+docker/volumes/*/data/
+*.tar.gz
+offline/bundles/
+offline/downloads/
+offline/*.tar
+offline/*.tar.gz
+
+# Archivos de imagenes Docker exportadas
+docker/images/*.tar
+docker/images/*.tar.gz
+docker/images/saved/
+
+# Archivos de secrets y keys
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+secrets/
+keys/
+*.secret
+
+# Archivos de configuracion local
+*local.conf
+*local.yml
+*local.yaml
+
+# Cache y archivos temporales del sistema
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Archivos de Jenkins (datos persistentes)
+jenkins/data/
+jenkins/workspace/
+jenkins/plugins/*.jpi
+jenkins/plugins/*.hpi
+
+# Archivos de Prometheus y Grafana (datos)
+monitoring/prometheus/data/
+monitoring/grafana/data/
+monitoring/*/data/
+
+# Archivos comprimidos grandes
+*.zip
+*.tar
+*.gz
+!*.example.tar.gz
+
+# Archivos de lock y estado
+*.lock
+.state
+.lockfile
+
+# Archivos de Oracle (backups y exports)
+database/oracle/backups/
+database/oracle/exports/
+
+# Archivos de deployment temporal
+deploy/.tmp/
+deploy/backups/
