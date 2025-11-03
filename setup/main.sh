@@ -79,6 +79,18 @@ main() {
     log_info "Paso 5: Configurando Firewall..."
     run_setup_script "${SCRIPT_DIR}/05-firewall.sh"
     
+    log_separator
+    
+    # Paso 6: Instalar Prometheus
+    log_info "Paso 6: Instalando Prometheus..."
+    run_setup_script "${SCRIPT_DIR}/06-prometheus.sh"
+    
+    log_separator
+    
+    # Paso 7: Instalar Grafana
+    log_info "Paso 7: Instalando Grafana..."
+    run_setup_script "${SCRIPT_DIR}/07-grafana.sh"
+    
     log_info ""
     
     # Paso final: Verificar prerrequisitos finales

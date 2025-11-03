@@ -1,4 +1,29 @@
 version: '3.8'
 
-# Configuracion de Grafana en Docker
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./dashboards:/etc/grafana/provisioning/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_INSTALL_PLUGINS=
+    networks:
+      - monitoring-net
 
+volumes:
+  grafana_data:
+    driver: local
+
+networks:
+  monitoring-net:
+    driver: bridge
+    external: true
+    name: monitoring-net
