@@ -9,7 +9,9 @@ ENV ORACLE_HOME=/opt/oracle/instantclient \
     PATH=/opt/oracle/instantclient:${PATH}
 
 RUN set -eux; \
-    find /etc/apt -name '*.list' -print0 | xargs -0 sed -i 's|http://|https://|g'; \
+    if find /etc/apt -name '*.list' -print -quit | grep -q '.'; then \
+        find /etc/apt -name '*.list' -print0 | xargs -0 sed -i 's|http://|https://|g'; \
+    fi; \
     apt-get update; \
     apt-get install -y --no-install-recommends libaio1 unzip; \
     rm -rf /var/lib/apt/lists/*
