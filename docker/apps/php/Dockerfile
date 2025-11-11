@@ -9,9 +9,10 @@ ENV ORACLE_HOME=/opt/oracle/instantclient \
     PATH=/opt/oracle/instantclient:${PATH}
 
 RUN set -eux; \
-    if find /etc/apt -name '*.list' -print -quit | grep -q '.'; then \
-        find /etc/apt -name '*.list' -print0 | xargs -0 sed -i 's|http://|https://|g'; \
+    if find /etc/apt \( -name '*.list' -o -name '*.sources' \) -print -quit | grep -q '.'; then \
+        find /etc/apt \( -name '*.list' -o -name '*.sources' \) -print0 | xargs -0 sed -i 's|http://|https://|g'; \
     fi; \
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/90ignore-check-valid-until; \
     apt-get update; \
     apt-get install -y --no-install-recommends libaio1 unzip; \
     rm -rf /var/lib/apt/lists/*
