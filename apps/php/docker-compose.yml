@@ -1,8 +1,8 @@
 services:
   php-oracle-app:
     build:
-      context: .
-      dockerfile: ../docker/apps/php/Dockerfile
+      context: ../..
+      dockerfile: docker/apps/php/Dockerfile
     container_name: php-oracle-app
     env_file:
       - .env
