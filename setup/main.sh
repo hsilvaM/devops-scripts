@@ -4,6 +4,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="${SCRIPT_DIR}/../config"
+FLAG_UPDOWN=false
 
 # Cargar funciones comunes
 if [ -f "${CONFIG_DIR}/common.sh" ]; then
@@ -12,6 +13,32 @@ else
     echo "Error: No se encuentra common.sh"
     exit 1
 fi
+
+# Parsear argumentos
+print_usage() {
+    cat <<EOF
+Uso: $(basename "$0") [opciones]
+
+Opciones:
+  --updown    Detener servicios existentes antes de volver a desplegar
+  -h, --help  Mostrar esta ayuda
+EOF
+}
+
+for arg in "$@"; do
+    case "$arg" in
+        --updown)
+            FLAG_UPDOWN=true
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            log_warn "Argumento desconocido: ${arg}"
+            ;;
+    esac
+done
 
 # Verificar que estamos como root
 check_root
@@ -42,6 +69,38 @@ run_setup_script() {
     fi
 }
 
+stop_service() {
+    local dir="$1"
+    local description="$2"
+
+    if [ ! -d "$dir" ]; then
+        log_warn "Directorio no encontrado para ${description}: $dir"
+        return 0
+    fi
+
+    if [ ! -f "${dir}/docker-compose.yml" ]; then
+        log_warn "docker-compose.yml no encontrado en ${dir} (saltando ${description})"
+        return 0
+    fi
+
+    log_progress "Deteniendo ${description}..."
+    (cd "$dir" && docker compose down --remove-orphans)
+    if [ $? -eq 0 ]; then
+        log_success "${description} detenido"
+    else
+        log_warn "No se pudo detener ${description} (continuando)"
+    fi
+}
+
+stop_all_services() {
+    log_section "Deteniendo servicios Docker existentes"
+    stop_service "${SCRIPT_DIR}/../docker/jenkins" "Jenkins"
+    stop_service "${SCRIPT_DIR}/../docker/prometheus" "Prometheus"
+    stop_service "${SCRIPT_DIR}/../docker/grafana" "Grafana"
+    stop_service "${SCRIPT_DIR}/../apps/nextjs" "NextJS"
+    stop_service "${SCRIPT_DIR}/../apps/php" "PHP Oracle"
+}
+
 # Funcion principal
 main() {
     log_section "Script de Configuracion del Sistema"
@@ -62,6 +121,11 @@ main() {
     run_setup_script "${SCRIPT_DIR}/02-docker.sh"
     
     log_separator
+
+    if $FLAG_UPDOWN; then
+        stop_all_services
+        log_separator
+    fi
     
     # Paso 3: Instalar Oracle Client (si existe el script)
     log_info "Paso 3: Verificando/Instalando Oracle Client..."
