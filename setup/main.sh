@@ -103,6 +103,12 @@ main() {
     log_info "Paso 9: Desplegando NextJS..."
     run_setup_script "${SCRIPT_DIR}/../docker/apps/nextjs/install.sh"
     
+    log_separator
+    
+    # Paso 10: Desplegar aplicacion PHP con Oracle (OCI8)
+    log_info "Paso 10: Desplegando aplicacion PHP con Oracle..."
+    run_setup_script "${SCRIPT_DIR}/../docker/apps/php/install.sh"
+    
     log_info ""
     
     # Paso final: Verificar prerrequisitos finales
@@ -118,6 +124,7 @@ main() {
         log_info "Grafana:       http://localhost:3000 (admin/admin)"
         log_info "NextJS App:    http://localhost:3002"
         log_info "NestJS API:    http://localhost:3001"
+        log_info "PHP Oracle App:http://localhost:8080"
         log_info ""
         log_check "Verificar servicios corriendo:"
         log_info "docker ps"
