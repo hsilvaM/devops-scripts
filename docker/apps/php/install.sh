@@ -43,11 +43,6 @@ install_php_app() {
         exit 1
     fi
 
-    if [ ! -f "${PHP_APP_DIR}/.env" ]; then
-        log_warn "No se encontro .env. Copia .env.example y define tus credenciales antes de continuar."
-        exit 1
-    fi
-
     if [ ! -d "${SCRIPT_DIR}/instantclient" ] || [ -z "$(ls -A "${SCRIPT_DIR}/instantclient")" ]; then
         log_error "No se encontraron los paquetes de Oracle Instant Client en ${SCRIPT_DIR}/instantclient"
         log_info "Descarga los ZIP (BasicLite y SDK) desde Oracle y colocalos en esa carpeta."
