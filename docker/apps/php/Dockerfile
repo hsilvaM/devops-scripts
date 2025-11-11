@@ -13,8 +13,8 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends libaio1 unzip; \
     rm -rf /var/lib/apt/lists/*
 
-COPY instantclient/${BASIC_ZIP} /tmp/${BASIC_ZIP}
-COPY instantclient/${SDK_ZIP} /tmp/${SDK_ZIP}
+COPY docker/apps/php/instantclient/${BASIC_ZIP} /tmp/${BASIC_ZIP}
+COPY docker/apps/php/instantclient/${SDK_ZIP} /tmp/${SDK_ZIP}
 
 RUN set -eux; \
     mkdir -p /opt/oracle; \
@@ -27,7 +27,7 @@ RUN set -eux; \
     docker-php-ext-enable oci8; \
     rm -f /tmp/${BASIC_ZIP} /tmp/${SDK_ZIP}
 
-COPY php-app/ /var/www/html/
+COPY apps/php/php-app/ /var/www/html/
 
 RUN set -eux; \
     { \
