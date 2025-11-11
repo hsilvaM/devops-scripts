@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.2-apache-bookworm
 
 ARG BASIC_ZIP=instantclient-basic-linux.x64-12.1.0.2.0.zip
 ARG SDK_ZIP=instantclient-sdk-linux.x64-12.1.0.2.0.zip
