@@ -84,7 +84,7 @@ install_php_app() {
     if php_app_is_running; then
         log_success "App PHP con Oracle iniciada correctamente"
         log_section "Datos de acceso"
-        log_info "URL: http://localhost:8080/"
+        log_info "URL: http://localhost/php"
         log_info "Container: ${CONTAINER_NAME}"
         log_check "Ver logs: docker logs -f ${CONTAINER_NAME}"
     else
@@ -98,7 +98,7 @@ main() {
 
     if php_app_is_running; then
         log_success "La app PHP ya esta corriendo"
-        log_info "URL: http://localhost:8080/"
+        log_info "URL: http://localhost/php"
         log_check "Reiniciar: cd ${PHP_APP_DIR} && docker compose restart"
         log_check "Detener: cd ${PHP_APP_DIR} && docker compose down"
         return 0

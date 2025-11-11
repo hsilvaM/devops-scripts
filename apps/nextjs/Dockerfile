@@ -9,14 +9,14 @@ ENV PATH="${PNPM_HOME}:${PATH}"
 RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
 
 # Copiar archivos de dependencias primero para cachear layers
-COPY portal-emetra/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY portal-emetra/package.json ./package.json
+COPY pnpm-lock.yaml ./pnpm-lock.yaml
+COPY package.json ./package.json
 
 # Instalar dependencias (incluye dev dependencies necesarias para build)
 RUN pnpm install --frozen-lockfile
 
 # Copiar el resto de la aplicacion
-COPY portal-emetra/ .
+COPY . .
 
 # Build de la aplicacion
 RUN pnpm run build

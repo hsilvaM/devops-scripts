@@ -117,7 +117,7 @@ main() {
         log_info "Prometheus:    http://localhost:9090"
         log_info "Grafana:       http://localhost:3000 (admin/admin)"
         log_info "NextJS App:    http://localhost:3002"
-        log_info "PHP Oracle App:http://localhost:8080"
+        log_info "PHP Oracle App:http://localhost/php"
         log_info ""
         log_check "Verificar servicios corriendo:"
         log_info "docker ps"
