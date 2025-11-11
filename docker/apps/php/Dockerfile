@@ -9,6 +9,8 @@ ENV ORACLE_HOME=/opt/oracle/instantclient \
     PATH=/opt/oracle/instantclient:${PATH}
 
 RUN set -eux; \
+    sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list; \
+    sed -i 's|http://security.debian.org|https://security.debian.org|g' /etc/apt/sources.list; \
     apt-get update; \
     apt-get install -y --no-install-recommends libaio1 unzip; \
     rm -rf /var/lib/apt/lists/*
