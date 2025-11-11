@@ -54,7 +54,7 @@ main() {
     echo "  Prometheus:  http://localhost:9090"
     echo "  Grafana:     http://localhost:3000"
     echo "  NextJS App:  http://localhost:3002"
-    echo "  PHP Oracle:  http://localhost/php"
+    echo "  PHP Oracle:  http://localhost:3001/php"
 }
 
 main "$@"

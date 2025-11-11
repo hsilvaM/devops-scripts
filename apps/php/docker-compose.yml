@@ -9,7 +9,7 @@ services:
     networks:
       - apps-net
     ports:
-      - "80:80"
+      - "3001:80"
     volumes:
       - ./php-app:/var/www/html:ro
     restart: unless-stopped
