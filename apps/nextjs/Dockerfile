@@ -1,23 +1,29 @@
-# Dockerfile para NextJS
-FROM node:20-alpine
+# Dockerfile para NextJS Portal Emetra
+FROM node:20-bullseye-slim
 
 WORKDIR /app
 
-# Copiar package.json y package-lock.json primero para cachear layers
-COPY portal-emetra/package*.json ./
+# Habilitar pnpm via corepack
+ENV PNPM_HOME=/usr/local/share/pnpm
+ENV PATH="${PNPM_HOME}:${PATH}"
+RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
 
-# Instalar TODAS las dependencias (incluye dev dependencies necesarias)
-RUN npm install
+# Copiar archivos de dependencias primero para cachear layers
+COPY portal-emetra/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY portal-emetra/package.json ./package.json
+
+# Instalar dependencias (incluye dev dependencies necesarias para build)
+RUN pnpm install --frozen-lockfile
 
 # Copiar el resto de la aplicacion
 COPY portal-emetra/ .
 
 # Build de la aplicacion
-RUN npm run build
+RUN pnpm run build
 
 EXPOSE 3000
 
 # Usar NODE_ENV production pero mantener npm
 ENV NODE_ENV=production
 
-CMD ["npm", "run", "start"]
+CMD ["pnpm", "run", "start"]
