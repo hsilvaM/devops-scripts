@@ -1,0 +1,20 @@
+services:
+  php-oracle-app:
+    build:
+      context: .
+      dockerfile: ../docker/apps/php/Dockerfile
+    container_name: php-oracle-app
+    env_file:
+      - .env
+    networks:
+      - apps-net
+    ports:
+      - "8080:80"
+    volumes:
+      - ./php-app:/var/www/html:ro
+    restart: unless-stopped
+
+networks:
+  apps-net:
+    external: true
+
