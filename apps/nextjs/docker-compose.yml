@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  nextjs:
+  portal-emetra:
     build:
-      context: ./my-app
+      context: ./portal-emetra
       dockerfile: ../Dockerfile
-    container_name: nextjs-app
+    container_name: portal-emetra-app
     restart: unless-stopped
     ports:
       - "3002:3000"
@@ -13,7 +13,6 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
-      - NEXT_PUBLIC_API_URL=http://nestjs:3001
     networks:
       - apps-net
 

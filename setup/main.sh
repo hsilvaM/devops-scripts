@@ -93,20 +93,14 @@ main() {
     
     log_separator
     
-    # Paso 8: Desplegar NestJS
-    log_info "Paso 8: Desplegando NestJS..."
-    run_setup_script "${SCRIPT_DIR}/../docker/apps/nestjs/install.sh"
-    
-    log_separator
-    
-    # Paso 9: Desplegar NextJS
-    log_info "Paso 9: Desplegando NextJS..."
+    # Paso 8: Desplegar NextJS
+    log_info "Paso 8: Desplegando NextJS..."
     run_setup_script "${SCRIPT_DIR}/../docker/apps/nextjs/install.sh"
     
     log_separator
     
-    # Paso 10: Desplegar aplicacion PHP con Oracle (OCI8)
-    log_info "Paso 10: Desplegando aplicacion PHP con Oracle..."
+    # Paso 9: Desplegar aplicacion PHP con Oracle (OCI8)
+    log_info "Paso 9: Desplegando aplicacion PHP con Oracle..."
     run_setup_script "${SCRIPT_DIR}/../docker/apps/php/install.sh"
     
     log_info ""
@@ -123,7 +117,6 @@ main() {
         log_info "Prometheus:    http://localhost:9090"
         log_info "Grafana:       http://localhost:3000 (admin/admin)"
         log_info "NextJS App:    http://localhost:3002"
-        log_info "NestJS API:    http://localhost:3001"
         log_info "PHP Oracle App:http://localhost:8080"
         log_info ""
         log_check "Verificar servicios corriendo:"

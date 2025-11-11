@@ -4,6 +4,8 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="${SCRIPT_DIR}/../../../config"
 NEXTJS_DIR="${SCRIPT_DIR}/../../../apps/nextjs"
+APP_DIR="${NEXTJS_DIR}/portal-emetra"
+CONTAINER_NAME="portal-emetra-app"
 
 # Cargar funciones comunes
 if [ -f "${CONFIG_DIR}/common.sh" ]; then
@@ -36,7 +38,7 @@ docker_service_running() {
 
 # Funcion para verificar si NextJS esta corriendo
 nextjs_is_running() {
-    if docker ps | grep -q nextjs-app; then
+    if docker ps | grep -q "${CONTAINER_NAME}"; then
         return 0
     fi
     return 1
@@ -67,6 +69,14 @@ install_nextjs() {
         log_error "No se puede acceder al directorio de NextJS"
         exit 1
     }
+    
+    if [ ! -d "${APP_DIR}" ]; then
+        log_error "No se encuentra la aplicacion portal-emetra en ${APP_DIR}"
+        log_info ""
+        log_info "Clona el repositorio antes de ejecutar este instalador:"
+        log_info "git clone git@github.com-hsilvaM:EMETRA/portal-emetra.git ${APP_DIR}"
+        exit 1
+    fi
     
     # Construir imagen
     log_download "Construyendo imagen de NextJS..."
@@ -105,7 +115,7 @@ install_nextjs() {
     log_info "Puerto: 3002"
     log_info ""
     log_check "Verificar logs de NextJS:"
-    log_info "docker logs nextjs-app"
+    log_info "docker logs ${CONTAINER_NAME}"
 }
 
 # Funcion principal

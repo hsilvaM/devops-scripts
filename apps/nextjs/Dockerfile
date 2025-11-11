@@ -4,13 +4,13 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copiar package.json y package-lock.json primero para cachear layers
-COPY my-app/package*.json ./
+COPY portal-emetra/package*.json ./
 
 # Instalar TODAS las dependencias (incluye dev dependencies necesarias)
 RUN npm install
 
 # Copiar el resto de la aplicacion
-COPY my-app/ .
+COPY portal-emetra/ .
 
 # Build de la aplicacion
 RUN npm run build
