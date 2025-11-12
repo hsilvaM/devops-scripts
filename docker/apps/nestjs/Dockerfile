@@ -9,13 +9,17 @@ ENV ORACLE_HOME=/opt/oracle/instantclient \
     PATH=/opt/oracle/instantclient:${PATH}
 
 RUN set -eux; \
-    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/90ignore-check-valid-until; \
-    echo 'Acquire::https::Verify-Peer "false";' > /etc/apt/apt.conf.d/80insecure-https; \
-    echo 'Acquire::https::Verify-Host "false";' >> /etc/apt/apt.conf.d/80insecure-https; \
-    apt-get update; \
+    if [ -f /etc/apt/sources.list ]; then \
+        sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list; \
+        sed -i 's|http://security.debian.org|https://security.debian.org|g' /etc/apt/sources.list; \
+    fi; \
+    if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+        sed -i 's|http://deb.debian.org/debian|https://deb.debian.org/debian|g' /etc/apt/sources.list.d/debian.sources; \
+        sed -i 's|http://security.debian.org/debian-security|https://security.debian.org/debian-security|g' /etc/apt/sources.list.d/debian.sources; \
+    fi; \
+    apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false; \
     apt-get install -y --no-install-recommends ca-certificates; \
-    rm /etc/apt/apt.conf.d/80insecure-https; \
-    apt-get update; \
+    apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false; \
     apt-get install -y --no-install-recommends libaio1 unzip build-essential python3; \
     rm -rf /var/lib/apt/lists/*
 
