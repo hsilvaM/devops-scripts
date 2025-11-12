@@ -1,4 +1,4 @@
-FROM node:20-bullseye-slim
+FROM node:20-bookworm
 
 ARG BASIC_ZIP=instantclient-basic-linux.x64-12.1.0.2.0.zip
 ARG SDK_ZIP=instantclient-sdk-linux.x64-12.1.0.2.0.zip
@@ -9,10 +9,12 @@ ENV ORACLE_HOME=/opt/oracle/instantclient \
     PATH=/opt/oracle/instantclient:${PATH}
 
 RUN set -eux; \
-    if find /etc/apt \( -name '*.list' -o -name '*.sources' \) -print -quit | grep -q '.'; then \
-        find /etc/apt \( -name '*.list' -o -name '*.sources' \) -print0 | xargs -0 sed -i 's|http://|https://|g'; \
-    fi; \
     echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/90ignore-check-valid-until; \
+    echo 'Acquire::https::Verify-Peer "false";' > /etc/apt/apt.conf.d/80insecure-https; \
+    echo 'Acquire::https::Verify-Host "false";' >> /etc/apt/apt.conf.d/80insecure-https; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates; \
+    rm /etc/apt/apt.conf.d/80insecure-https; \
     apt-get update; \
     apt-get install -y --no-install-recommends libaio1 unzip build-essential python3; \
     rm -rf /var/lib/apt/lists/*
