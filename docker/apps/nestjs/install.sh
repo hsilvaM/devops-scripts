@@ -8,9 +8,6 @@ APP_DIR="${NESTJS_DIR}/api-portal"
 COMPOSE_FILE="${NESTJS_DIR}/docker-compose.yml"
 ENV_FILE="${APP_DIR}/.env"
 CONTAINER_NAME="nestjs-api-portal"
-INSTANTCLIENT_PATH="${SCRIPT_DIR}/../php/instantclient"
-BASIC_ZIP="instantclient-basic-linux.x64-12.1.0.2.0.zip"
-SDK_ZIP="instantclient-sdk-linux.x64-12.1.0.2.0.zip"
 
 if [ -f "${CONFIG_DIR}/common.sh" ]; then
     source "${CONFIG_DIR}/common.sh"
@@ -43,27 +40,19 @@ ensure_env_file() {
     fi
 }
 
-ensure_instant_client() {
-    if [ ! -f "${INSTANTCLIENT_PATH}/${BASIC_ZIP}" ] || [ ! -f "${INSTANTCLIENT_PATH}/${SDK_ZIP}" ]; then
-        log_error "No se encontraron los paquetes de Oracle Instant Client en ${INSTANTCLIENT_PATH}"
-        log_info "Coloca ${BASIC_ZIP} y ${SDK_ZIP} en esa carpeta antes de continuar."
-        exit 1
-    fi
-}
-
 install_nestjs() {
     log_install "Instalando API NestJS en Docker..."
-
+    
     if ! docker_is_installed; then
         log_error "Docker no esta instalado. Ejecuta ./setup/02-docker.sh primero."
         exit 1
     fi
-
+    
     if ! docker_service_running; then
         log_error "Docker no esta corriendo. Ejecuta: systemctl start docker"
         exit 1
     fi
-
+    
     if [ ! -d "${APP_DIR}" ]; then
         log_error "No se encuentra la aplicacion api-portal en ${APP_DIR}"
         log_info ""
@@ -78,35 +67,34 @@ install_nestjs() {
     fi
 
     ensure_env_file
-    ensure_instant_client
 
     if ! docker network ls | grep -q "apps-net"; then
         log_config "Creando red apps-net..."
         docker network create apps-net
     fi
-
+    
     cd "${NESTJS_DIR}" || {
         log_error "No se puede acceder al directorio de NestJS"
         exit 1
     }
-
+    
     log_download "Construyendo imagen de la API NestJS..."
-    docker compose build
+    docker compose build --pull
     if [ $? -ne 0 ]; then
         log_error "Error al construir la imagen de NestJS"
         exit 1
     fi
-
+    
     log_install "Iniciando contenedor de la API NestJS..."
     docker compose up -d
     if [ $? -ne 0 ]; then
         log_error "Error al iniciar el contenedor de NestJS"
         exit 1
     fi
-
+    
     log_progress "Esperando a que la API NestJS responda..."
     sleep 8
-
+    
     if nestjs_is_running; then
         log_success "API NestJS iniciada correctamente"
         log_section "Datos de acceso"
@@ -121,7 +109,7 @@ install_nestjs() {
 
 main() {
     log_section "Instalacion de API NestJS en Docker"
-
+    
     if nestjs_is_running; then
         log_success "La API NestJS ya esta corriendo"
         log_info "URL: http://localhost:3003"
@@ -129,7 +117,7 @@ main() {
         log_check "Detener: cd ${NESTJS_DIR} && docker compose down"
         return 0
     fi
-
+    
     install_nestjs
 }
 

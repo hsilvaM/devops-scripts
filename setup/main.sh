@@ -5,6 +5,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="${SCRIPT_DIR}/../config"
 FLAG_UPDOWN=false
+FLAG_RESTART_APPS=false
 
 # Cargar funciones comunes
 if [ -f "${CONFIG_DIR}/common.sh" ]; then
@@ -20,8 +21,9 @@ print_usage() {
 Uso: $(basename "$0") [opciones]
 
 Opciones:
-  --updown    Detener servicios existentes antes de volver a desplegar
-  -h, --help  Mostrar esta ayuda
+  --updown        Detener servicios existentes antes de volver a desplegar
+  --restart-apps  Limpiar imagenes y reiniciar solo las aplicaciones (NestJS/NextJS/PHP)
+  -h, --help      Mostrar esta ayuda
 EOF
 }
 
@@ -29,6 +31,9 @@ for arg in "$@"; do
     case "$arg" in
         --updown)
             FLAG_UPDOWN=true
+            ;;
+        --restart-apps)
+            FLAG_RESTART_APPS=true
             ;;
         -h|--help)
             print_usage
@@ -39,6 +44,11 @@ for arg in "$@"; do
             ;;
     esac
 done
+
+if $FLAG_UPDOWN && $FLAG_RESTART_APPS; then
+    log_warn "--updown se ignora porque se indicó --restart-apps"
+    FLAG_UPDOWN=false
+fi
 
 # Verificar que estamos como root
 check_root
@@ -97,14 +107,66 @@ stop_all_services() {
     stop_service "${SCRIPT_DIR}/../docker/jenkins" "Jenkins"
     stop_service "${SCRIPT_DIR}/../docker/prometheus" "Prometheus"
     stop_service "${SCRIPT_DIR}/../docker/grafana" "Grafana"
+    stop_service "${SCRIPT_DIR}/../apps/nestjs" "NestJS"
     stop_service "${SCRIPT_DIR}/../apps/nextjs" "NextJS"
     stop_service "${SCRIPT_DIR}/../apps/php" "PHP Oracle"
+}
+
+restart_apps() {
+    log_section "Reinicio de aplicaciones (NestJS / NextJS / PHP)"
+
+    local services=(
+        "NestJS API|apps/nestjs"
+        "NextJS Portal Emetra|apps/nextjs"
+        "PHP Oracle|apps/php"
+    )
+
+    for entry in "${services[@]}"; do
+        IFS='|' read -r label rel_dir <<< "${entry}"
+        local full_dir="${SCRIPT_DIR}/../${rel_dir}"
+        local compose_file="${full_dir}/docker-compose.yml"
+
+        if [ ! -d "${full_dir}" ] || [ ! -f "${compose_file}" ]; then
+            log_warn "No se encontró docker-compose para ${label} (${full_dir})"
+            continue
+        fi
+
+        log_progress "Deteniendo ${label}..."
+        (cd "${full_dir}" && docker compose down --remove-orphans)
+
+        log_progress "Eliminando imagenes locales de ${label}..."
+        (cd "${full_dir}" && docker compose down --rmi all --remove-orphans) >/dev/null 2>&1
+
+        log_progress "Descargando imagenes base actualizadas de ${label}..."
+        (cd "${full_dir}" && docker compose pull) >/dev/null 2>&1
+
+        log_progress "Reconstruyendo contenedores de ${label}..."
+        if (cd "${full_dir}" && docker compose build --pull --no-cache); then
+            log_progress "Levantando ${label}..."
+            if (cd "${full_dir}" && docker compose up -d); then
+                log_success "${label} desplegado nuevamente"
+            else
+                log_error "No se pudo iniciar ${label}"
+            fi
+        else
+            log_error "No se pudo reconstruir ${label}"
+        fi
+
+        log_separator
+    done
+
+    log_success "Proceso de reinicio de aplicaciones finalizado"
 }
 
 # Funcion principal
 main() {
     log_section "Script de Configuracion del Sistema"
     log_info ""
+
+    if $FLAG_RESTART_APPS; then
+        restart_apps
+        return 0
+    fi
     
     # Paso 1: Verificar prerrequisitos iniciales
     log_info "Paso 1: Verificando prerrequisitos iniciales..."
