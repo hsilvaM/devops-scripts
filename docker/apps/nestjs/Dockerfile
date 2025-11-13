@@ -14,9 +14,7 @@ RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
 
 COPY apps/nestjs/api-portal/ .
 
-RUN pnpm run build && \
-    if [ -d dist/src ]; then cp -r dist/src/* dist/ && rm -rf dist/src; fi && \
-    if [ -f dist/ormconfig.js ]; then cp dist/ormconfig.js ./ormconfig.js; fi
+RUN pnpm run build
 
 RUN pnpm prune --prod
 
@@ -24,5 +22,5 @@ EXPOSE 3000
 
 ENV NODE_ENV=production
 
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
 
