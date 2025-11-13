@@ -1,3 +1,5 @@
+docker/base/oracle-node/instantclient/
+docker/base/oracle-php/instantclient/
 # Archivos de IA y herramientas de desarrollo
 .cursor/
 .cursorrules
