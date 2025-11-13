@@ -14,7 +14,8 @@ RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
 
 COPY apps/nestjs/api-portal/ .
 
-RUN pnpm run build
+RUN pnpm run build && \
+    if [ -d dist/src ]; then cp -r dist/src/* dist/ && rm -rf dist/src; fi
 
 EXPOSE 3000
 
