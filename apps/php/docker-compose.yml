@@ -6,15 +6,8 @@ services:
     container_name: php-oracle-app
     env_file:
       - .env
-    networks:
-      - apps-net
-    ports:
-      - "3001:80"
+    network_mode: host
     volumes:
       - ./php-app:/var/www/html:ro
     restart: unless-stopped
-
-networks:
-  apps-net:
-    external: true
 
