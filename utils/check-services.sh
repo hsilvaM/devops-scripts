@@ -43,7 +43,6 @@ main() {
     log_info ""
     log_info "=== Aplicaciones ==="
     check_container "nestjs-api-portal" "NestJS API"
-    check_container "portal-emetra-app" "NextJS Portal Emetra"
     
     log_info ""
     log_section "Redes Docker"
@@ -55,7 +54,6 @@ main() {
     echo "  Prometheus:  http://localhost:9090"
     echo "  Grafana:     http://localhost:3000"
     echo "  NestJS API:  http://localhost:3003"
-    echo "  NextJS App:  http://localhost:3002"
     echo "  PHP Oracle:  http://localhost:3001/php"
 }
 

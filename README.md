@@ -10,7 +10,7 @@ Estructura de scripts para configurar y desplegar infraestructura en servidor RH
 - `firewall/` - Configuracion de firewall (firewalld) en RHEL
 - `jenkins/` - Instalacion y configuracion de Jenkins
 - `database/` - Configuracion de base de datos Oracle
-- `apps/` - Aplicaciones NextJS y NestJS
+- `apps/` - Aplicaciones NestJS y PHP
 - `monitoring/` - Prometheus y Grafana
 - `offline/` - Scripts para preparar bundles offline
 - `utils/` - Utilidades reutilizables
