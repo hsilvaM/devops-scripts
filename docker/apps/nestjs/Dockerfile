@@ -16,7 +16,8 @@ RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
 
 COPY apps/nestjs/${APP_NAME}/ .
 
-RUN pnpm run build
+RUN pnpm run build && \
+    if [ -d dist/src ]; then cp -r dist/src/* dist/ && rm -rf dist/src; fi
 
 RUN pnpm prune --prod
 
@@ -24,5 +25,5 @@ EXPOSE 3000
 
 ENV NODE_ENV=production
 
-CMD ["node", "dist/main"]
+CMD ["pnpm", "run", "start:prod"]
 
