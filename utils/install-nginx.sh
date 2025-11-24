@@ -230,9 +230,23 @@ show_nginx_info() {
         
         # Mostrar puertos en uso
         log_info "Puertos en uso:"
-        netstat -tlnp 2>/dev/null | grep nginx | awk '{print "  " $4}' || \
-        ss -tlnp 2>/dev/null | grep nginx | awk '{print "  " $4}' || \
-        log_info "  (No se pudo obtener informacion de puertos)"
+        if command_exists ss; then
+            ss -tlnp 2>/dev/null | grep nginx | awk '{print "  " $4}' | sort -u
+        elif command_exists netstat; then
+            netstat -tlnp 2>/dev/null | grep nginx | awk '{print "  " $4}' | sort -u
+        else
+            log_info "  (No se pudo obtener informacion de puertos)"
+        fi
+        
+        # Verificar especificamente el puerto 3002
+        log_info ""
+        log_check "Verificando puerto 3002..."
+        if ss -tlnp 2>/dev/null | grep -q ":3002 " || netstat -tlnp 2>/dev/null | grep -q ":3002 "; then
+            log_success "Puerto 3002: ESCUCHANDO"
+        else
+            log_warn "Puerto 3002: NO DETECTADO"
+            log_info "Puede ser necesario reiniciar nginx: systemctl restart nginx"
+        fi
     else
         log_warn "Estado: DETENIDO"
     fi
@@ -318,7 +332,32 @@ main() {
         log_success "Nginx recargado exitosamente"
     else
         log_warn "No se pudo recargar Nginx automaticamente"
-        log_info "Ejecuta manualmente: systemctl reload nginx"
+        log_info "Intentando reiniciar nginx..."
+        systemctl restart nginx
+        if [ $? -eq 0 ]; then
+            log_success "Nginx reiniciado exitosamente"
+        else
+            log_error "No se pudo reiniciar Nginx"
+            log_info "Ejecuta manualmente: systemctl restart nginx"
+        fi
+    fi
+    
+    # Verificar que el puerto 3002 este escuchando
+    log_info ""
+    log_check "Verificando que nginx este escuchando en puerto 3002..."
+    sleep 2
+    if ss -tlnp 2>/dev/null | grep -q ":3002 " || netstat -tlnp 2>/dev/null | grep -q ":3002 "; then
+        log_success "Nginx esta escuchando en puerto 3002"
+    else
+        log_warn "Nginx no esta escuchando en puerto 3002"
+        log_info "Verificando configuracion..."
+        if [ -f "/etc/nginx/conf.d/fotos.conf" ]; then
+            log_info "Archivo de configuracion existe: /etc/nginx/conf.d/fotos.conf"
+            log_info "Revisa los logs: tail -f /var/log/nginx/error.log"
+            log_info "Verifica la config: nginx -t"
+        else
+            log_error "Archivo de configuracion no encontrado"
+        fi
     fi
     
     log_info ""

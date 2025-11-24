@@ -42,7 +42,8 @@ main() {
     
     log_info ""
     log_info "=== Aplicaciones ==="
-    check_container "nestjs-api-portal" "NestJS API"
+    check_container "nestjs-api-portal" "NestJS API Portal"
+    check_container "nestjs-api-autenticacion" "NestJS API Autenticacion"
     
     log_info ""
     log_section "Redes Docker"
@@ -50,11 +51,12 @@ main() {
     
     log_info ""
     log_section "Resumen de Puertos"
-    echo "  Jenkins:     http://localhost:8080/jenkins"
-    echo "  Prometheus:  http://localhost:9090"
-    echo "  Grafana:     http://localhost:3000"
-    echo "  NestJS API:  http://localhost:3003"
-    echo "  PHP Oracle:  http://localhost:3001/php"
+    echo "  Jenkins:              http://localhost:8080/jenkins"
+    echo "  Prometheus:            http://localhost:9090"
+    echo "  Grafana:               http://localhost:3000"
+    echo "  NestJS API Portal:     http://localhost:3003"
+    echo "  NestJS API Autenticacion: http://localhost:3004"
+    echo "  PHP Oracle:            http://localhost:3001/php"
 }
 
 main "$@"

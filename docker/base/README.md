@@ -7,8 +7,8 @@ instalaciones durante el despliegue en servidores sin acceso a Internet.
 ## Preparación de archivos
 
 1. Descarga desde Oracle los archivos ZIP:
-   - `instantclient-basic-linux.x64-12.1.0.2.0.zip`
-   - `instantclient-sdk-linux.x64-12.1.0.2.0.zip`
+   - `instantclient-basic-linux.x64-12.2.0.1.0.zip`
+   - `instantclient-sdk-linux.x64-12.2.0.1.0.zip`
 
 2. Copia ambos ZIP en:
    - `docker/base/oracle-node/instantclient/`
@@ -25,19 +25,27 @@ Desde la raíz del repositorio:
 # Imagen base para aplicaciones Node/NestJS
 docker build \
   -f docker/base/oracle-node/Dockerfile \
-  -t <usuario>/oracle-node-base:latest .
+  --build-arg BASIC_ZIP=instantclient-basic-linux.x64-12.2.0.1.0.zip \
+  --build-arg SDK_ZIP=instantclient-sdk-linux.x64-12.2.0.1.0.zip \
+  -t hsilv/oracle-node-base:latest .
 
 # Imagen base para aplicaciones PHP/Apache
 docker build \
   -f docker/base/oracle-php/Dockerfile \
-  -t <usuario>/oracle-php-base:latest .
+  --build-arg BASIC_ZIP=instantclient-basic-linux.x64-12.2.0.1.0.zip \
+  --build-arg SDK_ZIP=instantclient-sdk-linux.x64-12.2.0.1.0.zip \
+  -t hsilv/oracle-php-base:latest .
 ```
 
 Una vez generadas, súbelas a tu registro (ej. Docker Hub):
 
 ```bash
-docker push <usuario>/oracle-node-base:latest
-docker push <usuario>/oracle-php-base:latest
+# Autenticarse en Docker Hub (si no lo has hecho)
+docker login
+
+# Subir imágenes
+docker push hsilv/oracle-node-base:latest
+docker push hsilv/oracle-php-base:latest
 ```
 
 ## Uso en los proyectos

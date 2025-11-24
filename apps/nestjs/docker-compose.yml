@@ -3,6 +3,8 @@ services:
     build:
       context: ../..
       dockerfile: docker/apps/nestjs/Dockerfile
+      args:
+        - APP_NAME=api-portal
     container_name: nestjs-api-portal
     restart: unless-stopped
     network_mode: host
@@ -11,4 +13,19 @@ services:
       - NODE_ENV=production
     env_file:
       - ./api-portal/.env
+
+  api-autenticacion:
+    build:
+      context: ../..
+      dockerfile: docker/apps/nestjs/Dockerfile
+      args:
+        - APP_NAME=api-autenticacion
+    container_name: nestjs-api-autenticacion
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PORT=3004
+      - NODE_ENV=production
+    env_file:
+      - ./api-autenticacion/.env
 
