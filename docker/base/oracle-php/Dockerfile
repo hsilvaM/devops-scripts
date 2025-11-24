@@ -1,8 +1,8 @@
 FROM php:8.2-apache-bookworm
 
-ARG BASIC_ZIP=instantclient-basic-linux.x64-12.1.0.2.0.zip
-ARG SDK_ZIP=instantclient-sdk-linux.x64-12.1.0.2.0.zip
-ARG INSTANTCLIENT_DIR=instantclient_12_1
+ARG BASIC_ZIP=instantclient-basic-linux.x64-12.2.0.1.0.zip
+ARG SDK_ZIP=instantclient-sdk-linux.x64-12.2.0.1.0.zip
+ARG INSTANTCLIENT_DIR=instantclient_12_2
 
 ENV ORACLE_HOME=/opt/oracle/instantclient \
     LD_LIBRARY_PATH=/opt/oracle/instantclient:${LD_LIBRARY_PATH} \
