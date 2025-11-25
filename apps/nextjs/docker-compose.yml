@@ -1,6 +1,9 @@
 services:
   portal-emetra:
     build:
+      # IMPORTANTE: El contexto debe apuntar al directorio raiz de la app Next.js
+      # Si portal-emetra es un monorepo, ajusta la ruta al subdirectorio correcto
+      # Ejemplo: ./portal-emetra/frontend o ./portal-emetra/app
       context: ./portal-emetra
       dockerfile: ../Dockerfile
     container_name: portal-emetra-app

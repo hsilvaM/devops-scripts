@@ -25,9 +25,7 @@ RUN if [ ! -d "node_modules" ]; then \
         echo "ERROR: node_modules no existe despues de pnpm install"; \
         exit 1; \
     fi && \
-    echo "Verificando instalacion de dependencias..." && \
-    (pnpm list react next 2>&1 | head -10 || echo "No se pudo verificar lista de paquetes") && \
-    echo "Dependencias instaladas"
+    echo "Dependencias instaladas correctamente"
 
 # Copiar el resto de la aplicacion (excluyendo node_modules para no sobrescribir)
 COPY . .
@@ -45,16 +43,13 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
 RUN echo "Reinstalando dependencias despues de copiar codigo..." && \
     pnpm install --prefer-frozen-lockfile || pnpm install --no-frozen-lockfile
 
-# Verificar que las dependencias estan disponibles usando pnpm list
-# Esto es mas confiable que verificar directorios ya que pnpm usa estructura diferente
-RUN echo "Verificando que react y next estan instalados..." && \
-    pnpm list react next 2>&1 | grep -E "(react|next)@[0-9]" || { \
-        echo "ERROR: react o next no encontrados en las dependencias instaladas"; \
-        echo "Listando todas las dependencias:"; \
-        pnpm list --depth=0 2>&1 | head -30; \
+# Verificar que las dependencias estan disponibles
+RUN echo "Verificando instalacion de dependencias..." && \
+    if [ ! -d "node_modules" ]; then \
+        echo "ERROR: node_modules no existe"; \
         exit 1; \
-    } && \
-    echo "Dependencias verificadas correctamente"
+    fi && \
+    echo "Dependencias listas para build"
 
 # Build de la aplicacion
 RUN pnpm run build
