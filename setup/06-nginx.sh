@@ -214,12 +214,61 @@ install_nginx() {
         log_progress "Intentando instalar nginx desde codigo fuente..."
         
         # Instalar dependencias para compilar
+        log_progress "Instalando dependencias de compilacion..."
         if command_exists yum; then
             yum groupinstall -y "Development Tools" 2>/dev/null || true
-            yum install -y pcre-devel zlib-devel openssl-devel wget 2>/dev/null || true
+            # Intentar instalar pcre-devel desde diferentes fuentes
+            yum install -y pcre-devel zlib-devel openssl-devel wget gcc make 2>/dev/null || {
+                log_progress "pcre-devel no disponible en repositorios, compilando PCRE..."
+                # Compilar PCRE si no está disponible
+                local pcre_version="8.45"
+                local pcre_dir="/tmp/pcre-${pcre_version}"
+                local pcre_tar="${pcre_dir}.tar.gz"
+                
+                if command_exists wget; then
+                    wget -O "${pcre_tar}" "https://sourceforge.net/projects/pcre/files/pcre/${pcre_version}/pcre-${pcre_version}.tar.gz/download" 2>/dev/null
+                elif command_exists curl; then
+                    curl -L -o "${pcre_tar}" "https://sourceforge.net/projects/pcre/files/pcre/${pcre_version}/pcre-${pcre_version}.tar.gz/download" 2>/dev/null
+                fi
+                
+                if [ -f "${pcre_tar}" ]; then
+                    cd /tmp
+                    tar -xzf "${pcre_tar}"
+                    cd "pcre-${pcre_version}"
+                    ./configure --prefix=/usr/local
+                    make -j$(nproc)
+                    make install
+                    cd /
+                    rm -rf "${pcre_dir}" "${pcre_tar}"
+                fi
+            }
         elif command_exists dnf; then
             dnf groupinstall -y "Development Tools" 2>/dev/null || true
-            dnf install -y pcre-devel zlib-devel openssl-devel wget 2>/dev/null || true
+            # Intentar instalar pcre-devel desde diferentes fuentes
+            dnf install -y pcre-devel zlib-devel openssl-devel wget gcc make 2>/dev/null || {
+                log_progress "pcre-devel no disponible en repositorios, compilando PCRE..."
+                # Compilar PCRE si no está disponible
+                local pcre_version="8.45"
+                local pcre_dir="/tmp/pcre-${pcre_version}"
+                local pcre_tar="${pcre_dir}.tar.gz"
+                
+                if command_exists wget; then
+                    wget -O "${pcre_tar}" "https://sourceforge.net/projects/pcre/files/pcre/${pcre_version}/pcre-${pcre_version}.tar.gz/download" 2>/dev/null
+                elif command_exists curl; then
+                    curl -L -o "${pcre_tar}" "https://sourceforge.net/projects/pcre/files/pcre/${pcre_version}/pcre-${pcre_version}.tar.gz/download" 2>/dev/null
+                fi
+                
+                if [ -f "${pcre_tar}" ]; then
+                    cd /tmp
+                    tar -xzf "${pcre_tar}"
+                    cd "pcre-${pcre_version}"
+                    ./configure --prefix=/usr/local
+                    make -j$(nproc)
+                    make install
+                    cd /
+                    rm -rf "${pcre_dir}" "${pcre_tar}"
+                fi
+            }
         fi
         
         # Descargar y compilar nginx
@@ -247,7 +296,17 @@ install_nginx() {
         tar -xzf "${nginx_tar}"
         cd "nginx-${nginx_version}"
         
-        ./configure --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --pid-path=/var/run/nginx.pid --lock-path=/var/run/nginx.lock --http-client-body-temp-path=/var/cache/nginx/client_temp --http-proxy-temp-path=/var/cache/nginx/proxy_temp --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp --http-scgi-temp-path=/var/cache/nginx/scgi_temp --user=nginx --group=nginx --with-http_ssl_module --with-http_realip_module --with-http_addition_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_random_index_module --with-http_secure_link_module --with-http_stub_status_module --with-http_auth_request_module --with-http_xslt_module=dynamic --with-http_image_filter_module=dynamic --with-http_geoip_module=dynamic --with-threads --with-stream --with-stream_ssl_module --with-stream_ssl_preread_module --with-stream_realip_module --with-stream_geoip_module=dynamic --with-http_slice_module --with-file-aio --with-http_v2_module
+        # Configurar nginx con PCRE si fue compilado localmente
+        local pcre_option=""
+        if [ -f "/usr/local/include/pcre.h" ]; then
+            pcre_option="--with-pcre=/usr/local"
+        elif [ -f "/usr/include/pcre.h" ]; then
+            pcre_option=""
+        elif [ -f "/usr/local/lib/libpcre.a" ] || [ -f "/usr/local/lib/libpcre.so" ]; then
+            pcre_option="--with-pcre=/usr/local"
+        fi
+        
+        ./configure --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --pid-path=/var/run/nginx.pid --lock-path=/var/run/nginx.lock --http-client-body-temp-path=/var/cache/nginx/client_temp --http-proxy-temp-path=/var/cache/nginx/proxy_temp --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp --http-scgi-temp-path=/var/cache/nginx/scgi_temp --user=nginx --group=nginx --with-http_ssl_module --with-http_realip_module --with-http_addition_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_random_index_module --with-http_secure_link_module --with-http_stub_status_module --with-http_auth_request_module --with-threads --with-stream --with-stream_ssl_module --with-stream_ssl_preread_module --with-stream_realip_module --with-http_slice_module --with-file-aio --with-http_v2_module ${pcre_option}
         
         if [ $? -ne 0 ]; then
             log_error "Error al configurar nginx"
