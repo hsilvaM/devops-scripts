@@ -33,6 +33,19 @@ nginx_is_running() {
     return 1
 }
 
+# Funcion para detectar version de RHEL/CentOS
+get_rhel_version() {
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        if [[ "$ID" == "rhel" ]] || [[ "$ID" == "centos" ]] || [[ "$ID" == "rocky" ]] || [[ "$ID" == "almalinux" ]]; then
+            VERSION_ID=$(echo "$VERSION_ID" | cut -d. -f1)
+            echo "$VERSION_ID"
+            return 0
+        fi
+    fi
+    return 1
+}
+
 # Funcion para instalar EPEL (necesario para nginx en RHEL/CentOS)
 install_epel() {
     if rpm -qa | grep -q epel-release; then
@@ -42,16 +55,65 @@ install_epel() {
     
     log_progress "Instalando repositorio EPEL..."
     
+    # Intentar primero con yum/dnf
     if command_exists yum; then
-        yum install -y epel-release
+        yum install -y epel-release 2>/dev/null
+        if [ $? -eq 0 ]; then
+            log_success "EPEL instalado correctamente"
+            return 0
+        fi
     elif command_exists dnf; then
-        dnf install -y epel-release
-    else
-        log_error "No se puede instalar EPEL sin yum/dnf"
+        dnf install -y epel-release 2>/dev/null
+        if [ $? -eq 0 ]; then
+            log_success "EPEL instalado correctamente"
+            return 0
+        fi
+    fi
+    
+    # Si falla, descargar e instalar el RPM directamente
+    log_progress "Los repositorios no estan disponibles, descargando EPEL directamente..."
+    
+    local rhel_version=$(get_rhel_version)
+    if [ -z "$rhel_version" ]; then
+        log_error "No se pudo detectar la version de RHEL/CentOS"
         return 1
     fi
     
-    if [ $? -eq 0 ]; then
+    local epel_url="https://dl.fedoraproject.org/pub/epel/epel-release-latest-${rhel_version}.noarch.rpm"
+    local temp_rpm="/tmp/epel-release.rpm"
+    
+    log_progress "Descargando EPEL desde ${epel_url}..."
+    
+    if command_exists curl; then
+        curl -L -o "${temp_rpm}" "${epel_url}" 2>/dev/null
+    elif command_exists wget; then
+        wget -O "${temp_rpm}" "${epel_url}" 2>/dev/null
+    else
+        log_error "No se encontro curl ni wget para descargar EPEL"
+        return 1
+    fi
+    
+    if [ $? -ne 0 ] || [ ! -f "${temp_rpm}" ]; then
+        log_error "Error al descargar EPEL"
+        return 1
+    fi
+    
+    log_progress "Instalando EPEL desde RPM descargado..."
+    if command_exists yum; then
+        yum localinstall -y "${temp_rpm}" 2>/dev/null
+    elif command_exists dnf; then
+        dnf localinstall -y "${temp_rpm}" 2>/dev/null
+    elif command_exists rpm; then
+        rpm -ivh "${temp_rpm}" 2>/dev/null
+    else
+        log_error "No se encontro herramienta para instalar RPM"
+        rm -f "${temp_rpm}"
+        return 1
+    fi
+    
+    rm -f "${temp_rpm}"
+    
+    if rpm -qa | grep -q epel-release; then
         log_success "EPEL instalado correctamente"
         return 0
     else
