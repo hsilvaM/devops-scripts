@@ -326,48 +326,85 @@ install_nginx() {
     fi
 }
 
-# Funcion para crear configuracion de emetra.muniguate.com
-configure_emetra() {
-    log_config "Configurando Nginx para emetra.muniguate.com..."
+# Funcion para crear configuracion de nginx con Hello World
+configure_nginx() {
+    log_config "Configurando Nginx para mostrar Hello World..."
     
-    local config_file="${NGINX_SITES_DIR}/emetra.muniguate.com.conf"
+    local config_file="${NGINX_SITES_DIR}/default.conf"
+    local html_dir="/usr/share/nginx/html"
     
+    log_progress "Creando directorio HTML si no existe..."
+    mkdir -p "${html_dir}"
+    
+    log_progress "Creando pagina Hello World..."
+    cat > "${html_dir}/index.html" << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello World!</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        p {
+            font-size: 1.2rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hello World!</h1>
+        <p>Nginx is running successfully</p>
+    </div>
+</body>
+</html>
+EOF
+
     log_progress "Creando configuracion en ${config_file}..."
     
     cat > "${config_file}" << 'EOF'
 server {
     listen 80;
-    server_name emetra.muniguate.com;
+    listen [::]:80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
 
     # Logs
-    access_log /var/log/nginx/emetra-access.log;
-    error_log /var/log/nginx/emetra-error.log;
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
 
-    # Configuracion de proxy
     location / {
-        proxy_pass http://localhost:3002;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        
-        # Timeouts
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        try_files $uri $uri/ =404;
     }
-
-    # Configuracion de tamaño maximo de archivos
-    client_max_body_size 10M;
 }
 EOF
 
     if [ $? -eq 0 ]; then
         log_success "Configuracion creada en ${config_file}"
+        log_success "Pagina Hello World creada en ${html_dir}/index.html"
         return 0
     else
         log_error "Error al crear configuracion"
@@ -558,7 +595,7 @@ main() {
     log_separator
     
     # Crear configuracion
-    if ! configure_emetra; then
+    if ! configure_nginx; then
         log_error "No se pudo crear configuracion de Nginx"
         return 1
     fi
@@ -591,8 +628,9 @@ main() {
     
     log_info ""
     log_section "Nginx Instalado y Configurado"
-    log_info "Configuracion: ${NGINX_SITES_DIR}/emetra.muniguate.com.conf"
-    log_info "URL: http://emetra.muniguate.com -> http://localhost:3002"
+    log_info "Configuracion: ${NGINX_SITES_DIR}/default.conf"
+    log_info "Pagina HTML: /usr/share/nginx/html/index.html"
+    log_info "URL: http://localhost (puerto 80)"
     log_info ""
     log_check "Comandos utiles:"
     log_info "  Ver estado: systemctl status nginx"
