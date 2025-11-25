@@ -115,6 +115,14 @@ install_epel() {
     
     if rpm -qa | grep -q epel-release; then
         log_success "EPEL instalado correctamente"
+        log_progress "Actualizando cache de repositorios..."
+        if command_exists yum; then
+            yum clean all 2>/dev/null
+            yum makecache 2>/dev/null
+        elif command_exists dnf; then
+            dnf clean all 2>/dev/null
+            dnf makecache 2>/dev/null
+        fi
         return 0
     else
         log_error "Error al instalar EPEL"
@@ -132,21 +140,63 @@ install_nginx() {
     fi
     
     if command_exists yum; then
-        # Instalar EPEL primero si es necesario
-        if ! install_epel; then
-            log_error "No se pudo instalar EPEL, necesario para nginx"
-            return 1
+        # Habilitar repositorios base si están deshabilitados
+        log_progress "Habilitando repositorios base..."
+        subscription-manager repos --enable=rhel-*-appstream-rpms 2>/dev/null || true
+        subscription-manager repos --enable=rhel-*-baseos-rpms 2>/dev/null || true
+        
+        # Intentar habilitar CRB si existe el comando
+        if command_exists crb; then
+            log_progress "Habilitando repositorio CRB..."
+            crb enable 2>/dev/null || true
         fi
-        log_progress "Instalando Nginx con yum..."
-        yum install -y nginx
+        
+        # Instalar EPEL si es necesario
+        if ! install_epel; then
+            log_warn "No se pudo instalar EPEL, continuando sin el..."
+        fi
+        
+        log_progress "Buscando nginx en repositorios disponibles..."
+        # Intentar desde AppStream primero (RHEL 9)
+        if yum list available nginx 2>/dev/null | grep -q nginx; then
+            log_progress "nginx encontrado en repositorios, instalando..."
+            yum install -y nginx
+        elif yum list available --enablerepo=epel nginx 2>/dev/null | grep -q nginx; then
+            log_progress "nginx encontrado en EPEL, instalando..."
+            yum install -y nginx --enablerepo=epel
+        else
+            log_warn "nginx no encontrado en repositorios, intentando instalacion desde AppStream..."
+            yum install -y nginx --enablerepo='*' 2>/dev/null || yum install -y nginx
+        fi
     elif command_exists dnf; then
-        # Instalar EPEL primero si es necesario
-        if ! install_epel; then
-            log_error "No se pudo instalar EPEL, necesario para nginx"
-            return 1
+        # Habilitar repositorios base si están deshabilitados
+        log_progress "Habilitando repositorios base..."
+        subscription-manager repos --enable=rhel-*-appstream-rpms 2>/dev/null || true
+        subscription-manager repos --enable=rhel-*-baseos-rpms 2>/dev/null || true
+        
+        # Intentar habilitar CRB si existe el comando
+        if command_exists crb; then
+            log_progress "Habilitando repositorio CRB..."
+            crb enable 2>/dev/null || true
         fi
-        log_progress "Instalando Nginx con dnf..."
-        dnf install -y nginx
+        
+        # Instalar EPEL si es necesario
+        if ! install_epel; then
+            log_warn "No se pudo instalar EPEL, continuando sin el..."
+        fi
+        
+        log_progress "Buscando nginx en repositorios disponibles..."
+        # Intentar desde AppStream primero (RHEL 9)
+        if dnf list available nginx 2>/dev/null | grep -q nginx; then
+            log_progress "nginx encontrado en repositorios, instalando..."
+            dnf install -y nginx
+        elif dnf list available --enablerepo=epel nginx 2>/dev/null | grep -q nginx; then
+            log_progress "nginx encontrado en EPEL, instalando..."
+            dnf install -y nginx --enablerepo=epel
+        else
+            log_warn "nginx no encontrado en repositorios, intentando instalacion desde AppStream..."
+            dnf install -y nginx --enablerepo='*' 2>/dev/null || dnf install -y nginx
+        fi
     elif command_exists apt-get; then
         log_progress "Instalando Nginx con apt-get..."
         apt-get update
@@ -160,8 +210,77 @@ install_nginx() {
         log_success "Nginx instalado correctamente"
         return 0
     else
-        log_error "Error al instalar Nginx"
-        return 1
+        log_warn "No se pudo instalar nginx desde repositorios"
+        log_progress "Intentando instalar nginx desde codigo fuente..."
+        
+        # Instalar dependencias para compilar
+        if command_exists yum; then
+            yum groupinstall -y "Development Tools" 2>/dev/null || true
+            yum install -y pcre-devel zlib-devel openssl-devel wget 2>/dev/null || true
+        elif command_exists dnf; then
+            dnf groupinstall -y "Development Tools" 2>/dev/null || true
+            dnf install -y pcre-devel zlib-devel openssl-devel wget 2>/dev/null || true
+        fi
+        
+        # Descargar y compilar nginx
+        local nginx_version="1.24.0"
+        local nginx_dir="/tmp/nginx-${nginx_version}"
+        local nginx_tar="${nginx_dir}.tar.gz"
+        
+        log_progress "Descargando nginx ${nginx_version}..."
+        if command_exists wget; then
+            wget -O "${nginx_tar}" "http://nginx.org/download/nginx-${nginx_version}.tar.gz" 2>/dev/null
+        elif command_exists curl; then
+            curl -L -o "${nginx_tar}" "http://nginx.org/download/nginx-${nginx_version}.tar.gz" 2>/dev/null
+        else
+            log_error "No se encontro wget ni curl para descargar nginx"
+            return 1
+        fi
+        
+        if [ ! -f "${nginx_tar}" ]; then
+            log_error "No se pudo descargar nginx"
+            return 1
+        fi
+        
+        log_progress "Extrayendo y compilando nginx..."
+        cd /tmp
+        tar -xzf "${nginx_tar}"
+        cd "nginx-${nginx_version}"
+        
+        ./configure --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --pid-path=/var/run/nginx.pid --lock-path=/var/run/nginx.lock --http-client-body-temp-path=/var/cache/nginx/client_temp --http-proxy-temp-path=/var/cache/nginx/proxy_temp --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp --http-scgi-temp-path=/var/cache/nginx/scgi_temp --user=nginx --group=nginx --with-http_ssl_module --with-http_realip_module --with-http_addition_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_random_index_module --with-http_secure_link_module --with-http_stub_status_module --with-http_auth_request_module --with-http_xslt_module=dynamic --with-http_image_filter_module=dynamic --with-http_geoip_module=dynamic --with-threads --with-stream --with-stream_ssl_module --with-stream_ssl_preread_module --with-stream_realip_module --with-stream_geoip_module=dynamic --with-http_slice_module --with-file-aio --with-http_v2_module
+        
+        if [ $? -ne 0 ]; then
+            log_error "Error al configurar nginx"
+            return 1
+        fi
+        
+        make -j$(nproc)
+        if [ $? -ne 0 ]; then
+            log_error "Error al compilar nginx"
+            return 1
+        fi
+        
+        make install
+        if [ $? -ne 0 ]; then
+            log_error "Error al instalar nginx"
+            return 1
+        fi
+        
+        # Crear usuario nginx si no existe
+        if ! id nginx &>/dev/null; then
+            useradd -r -s /sbin/nologin nginx 2>/dev/null || true
+        fi
+        
+        # Crear directorios necesarios
+        mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/proxy_temp /var/cache/nginx/fastcgi_temp /var/cache/nginx/uwsgi_temp /var/cache/nginx/scgi_temp
+        chown -R nginx:nginx /var/cache/nginx
+        
+        # Limpiar
+        cd /
+        rm -rf "${nginx_dir}" "${nginx_tar}"
+        
+        log_success "Nginx compilado e instalado correctamente"
+        return 0
     fi
 }
 
