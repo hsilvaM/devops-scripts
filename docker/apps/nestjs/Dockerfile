@@ -19,6 +19,18 @@ COPY apps/nestjs/${APP_NAME}/ .
 RUN pnpm run build && \
     if [ -d dist/src ]; then cp -r dist/src/* dist/ && rm -rf dist/src; fi
 
+RUN if [ -f ormconfig.ts ]; then \
+        npx tsc ormconfig.ts --outDir dist --module commonjs --target ES2021 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule --baseUrl . --rootDir . && \
+        node -e "const fs = require('fs'); if (fs.existsSync('dist/ormconfig.js')) { let c = fs.readFileSync('dist/ormconfig.js', 'utf8'); c = c.replace(/from ['\"]src\//g, \"from './\"); c = c.replace(/'src\/\*\*/g, \"'dist/**\"); c = c.replace(/\"src\/\*\*/g, '\"dist/**'); fs.writeFileSync('dist/ormconfig.js', c); }"; \
+    fi
+
+RUN if [ -f ormconfig.migration.ts ]; then \
+        npx tsc ormconfig.migration.ts --outDir dist --module commonjs --target ES2021 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule --baseUrl . --rootDir . && \
+        node -e "const fs = require('fs'); if (fs.existsSync('dist/ormconfig.migration.js')) { let c = fs.readFileSync('dist/ormconfig.migration.js', 'utf8'); c = c.replace(/from ['\"]src\//g, \"from './\"); c = c.replace(/'src\/\*\*/g, \"'dist/**\"); c = c.replace(/\"src\/\*\*/g, '\"dist/**'); fs.writeFileSync('dist/ormconfig.migration.js', c); }"; \
+    fi
+
+RUN find dist -name "*.js" -type f -exec sed -i "s/from ['\"]ormconfig['\"]/from '.\/ormconfig'/g" {} \;
+
 RUN pnpm prune --prod
 
 EXPOSE 3000
