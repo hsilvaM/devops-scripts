@@ -13,7 +13,8 @@ COPY pnpm-lock.yaml* ./
 COPY package.json ./
 
 # Instalar dependencias (incluye dev dependencies necesarias para build)
-RUN pnpm install --prefer-frozen-lockfile || pnpm install --no-frozen-lockfile
+# Usar shamefully-hoist para compatibilidad con TypeScript y herramientas que esperan node_modules tradicional
+RUN pnpm install --prefer-frozen-lockfile --shamefully-hoist || pnpm install --no-frozen-lockfile --shamefully-hoist
 
 # Verificar que las dependencias se instalaron correctamente
 RUN if [ ! -d "node_modules" ]; then \
@@ -24,8 +25,27 @@ RUN if [ ! -d "node_modules" ]; then \
     (pnpm list react next 2>&1 | head -10 || echo "No se pudo verificar lista de paquetes") && \
     echo "Dependencias instaladas"
 
-# Copiar el resto de la aplicacion
+# Copiar el resto de la aplicacion (excluyendo node_modules para no sobrescribir)
 COPY . .
+
+# Reinstalar dependencias si es necesario (por si acaso se perdieron al copiar)
+RUN if [ ! -d "node_modules/react" ] && [ ! -L "node_modules/react" ]; then \
+        echo "Reinstalando dependencias..." && \
+        pnpm install --prefer-frozen-lockfile --shamefully-hoist || pnpm install --no-frozen-lockfile --shamefully-hoist; \
+    fi
+
+# Verificar que react y next estan disponibles antes del build
+RUN if [ ! -d "node_modules/react" ] && [ ! -L "node_modules/react" ]; then \
+        echo "ERROR: react no encontrado en node_modules"; \
+        echo "Contenido de node_modules:"; \
+        ls -la node_modules/ | head -20; \
+        exit 1; \
+    fi && \
+    if [ ! -d "node_modules/next" ] && [ ! -L "node_modules/next" ]; then \
+        echo "ERROR: next no encontrado en node_modules"; \
+        exit 1; \
+    fi && \
+    echo "Dependencias verificadas correctamente"
 
 # Build de la aplicacion
 RUN pnpm run build
