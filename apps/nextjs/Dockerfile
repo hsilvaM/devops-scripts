@@ -20,13 +20,6 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
 # Instalar dependencias (incluye dev dependencies necesarias para build)
 RUN pnpm install --prefer-frozen-lockfile || pnpm install --no-frozen-lockfile
 
-# Verificar que las dependencias se instalaron correctamente
-RUN if [ ! -d "node_modules" ]; then \
-        echo "ERROR: node_modules no existe despues de pnpm install"; \
-        exit 1; \
-    fi && \
-    echo "Dependencias instaladas correctamente"
-
 # Copiar el resto de la aplicacion (excluyendo node_modules para no sobrescribir)
 COPY . .
 
@@ -39,17 +32,7 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
     cat .npmrc
 
 # Reinstalar dependencias si es necesario (por si acaso se perdieron al copiar)
-# Forzar reinstalacion completa para asegurar que todo este disponible
-RUN echo "Reinstalando dependencias despues de copiar codigo..." && \
-    pnpm install --prefer-frozen-lockfile || pnpm install --no-frozen-lockfile
-
-# Verificar que las dependencias estan disponibles
-RUN echo "Verificando instalacion de dependencias..." && \
-    if [ ! -d "node_modules" ]; then \
-        echo "ERROR: node_modules no existe"; \
-        exit 1; \
-    fi && \
-    echo "Dependencias listas para build"
+RUN pnpm install --prefer-frozen-lockfile || pnpm install --no-frozen-lockfile
 
 # Build de la aplicacion
 RUN pnpm run build
