@@ -33,6 +33,33 @@ nginx_is_running() {
     return 1
 }
 
+# Funcion para instalar EPEL (necesario para nginx en RHEL/CentOS)
+install_epel() {
+    if rpm -qa | grep -q epel-release; then
+        log_success "EPEL ya esta instalado"
+        return 0
+    fi
+    
+    log_progress "Instalando repositorio EPEL..."
+    
+    if command_exists yum; then
+        yum install -y epel-release
+    elif command_exists dnf; then
+        dnf install -y epel-release
+    else
+        log_error "No se puede instalar EPEL sin yum/dnf"
+        return 1
+    fi
+    
+    if [ $? -eq 0 ]; then
+        log_success "EPEL instalado correctamente"
+        return 0
+    else
+        log_error "Error al instalar EPEL"
+        return 1
+    fi
+}
+
 # Funcion para instalar nginx
 install_nginx() {
     log_install "Instalando Nginx..."
@@ -43,9 +70,19 @@ install_nginx() {
     fi
     
     if command_exists yum; then
+        # Instalar EPEL primero si es necesario
+        if ! install_epel; then
+            log_error "No se pudo instalar EPEL, necesario para nginx"
+            return 1
+        fi
         log_progress "Instalando Nginx con yum..."
         yum install -y nginx
     elif command_exists dnf; then
+        # Instalar EPEL primero si es necesario
+        if ! install_epel; then
+            log_error "No se pudo instalar EPEL, necesario para nginx"
+            return 1
+        fi
         log_progress "Instalando Nginx con dnf..."
         dnf install -y nginx
     elif command_exists apt-get; then
