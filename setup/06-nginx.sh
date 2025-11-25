@@ -309,9 +309,9 @@ install_nginx() {
         fi
         
         # Crear directorios y establecer permisos
-        mkdir -p /var/log/nginx /var/cache/nginx /var/run /run
+        mkdir -p /var/log/nginx /var/cache/nginx /var/run
         chown -R nginx:nginx /var/log/nginx /var/cache/nginx 2>/dev/null || true
-        chmod 755 /var/log/nginx /var/cache/nginx /run /var/run 2>/dev/null || true
+        chmod 755 /var/log/nginx /var/cache/nginx /var/run 2>/dev/null || true
         
         # Crear directorios necesarios
         mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/proxy_temp /var/cache/nginx/fastcgi_temp /var/cache/nginx/uwsgi_temp /var/cache/nginx/scgi_temp
@@ -418,7 +418,7 @@ create_nginx_conf() {
 user nginx;
 worker_processes auto;
 error_log /var/log/nginx/error.log;
-pid /run/nginx.pid;
+pid /var/run/nginx.pid;
 
 events {
     worker_connections 1024;
@@ -502,10 +502,21 @@ start_nginx() {
     # Limpiar archivos PID y locks
     rm -f /run/nginx.pid /var/run/nginx.pid /var/run/nginx.lock /run/nginx.lock 2>/dev/null || true
     
-    # Asegurar que nginx puede escribir en /run
-    # En algunos sistemas, /run es tmpfs y necesita permisos específicos
-    if [ -d "/run" ]; then
-        chmod 1777 /run 2>/dev/null || chmod 755 /run 2>/dev/null || true
+    # Asegurar que /var/run existe y tiene permisos correctos
+    mkdir -p /var/run
+    chmod 755 /var/run 2>/dev/null || true
+    
+    # Crear override del servicio systemd si es necesario
+    local systemd_override="/etc/systemd/system/nginx.service.d/override.conf"
+    if [ ! -f "${systemd_override}" ]; then
+        log_progress "Creando override del servicio systemd para nginx..."
+        mkdir -p "$(dirname "${systemd_override}")"
+        cat > "${systemd_override}" << 'EOFSYSTEMD'
+[Service]
+PIDFile=/var/run/nginx.pid
+ExecStartPre=/bin/rm -f /var/run/nginx.pid
+EOFSYSTEMD
+        systemctl daemon-reload
     fi
     
     log_progress "Iniciando Nginx..."
