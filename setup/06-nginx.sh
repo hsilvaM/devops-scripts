@@ -308,6 +308,11 @@ install_nginx() {
             useradd -r -s /sbin/nologin nginx 2>/dev/null || true
         fi
         
+        # Crear directorios y establecer permisos
+        mkdir -p /var/log/nginx /var/cache/nginx /var/run /run
+        chown -R nginx:nginx /var/log/nginx /var/cache/nginx 2>/dev/null || true
+        chmod 755 /var/log/nginx /var/cache/nginx /run /var/run 2>/dev/null || true
+        
         # Crear directorios necesarios
         mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/proxy_temp /var/cache/nginx/fastcgi_temp /var/cache/nginx/uwsgi_temp /var/cache/nginx/scgi_temp
         chown -R nginx:nginx /var/cache/nginx
@@ -413,7 +418,7 @@ create_nginx_conf() {
 user nginx;
 worker_processes auto;
 error_log /var/log/nginx/error.log;
-pid /var/run/nginx.pid;
+pid /run/nginx.pid;
 
 events {
     worker_connections 1024;
@@ -460,22 +465,58 @@ start_nginx() {
         fi
     fi
     
+    log_progress "Verificando que el usuario nginx existe..."
+    if ! id nginx &>/dev/null; then
+        log_progress "Creando usuario nginx..."
+        useradd -r -s /sbin/nologin -d /var/cache/nginx -c "nginx user" nginx 2>/dev/null || {
+            log_error "No se pudo crear el usuario nginx"
+            return 1
+        }
+    fi
+    
     log_progress "Creando configuracion principal si no existe..."
     create_nginx_conf
     
     log_progress "Creando directorios necesarios..."
-    mkdir -p /var/log/nginx /var/cache/nginx /var/run
+    mkdir -p /var/log/nginx /var/cache/nginx /var/run /run
     mkdir -p /etc/nginx/conf.d
+    
+    # Asegurar permisos correctos
+    chown -R nginx:nginx /var/log/nginx /var/cache/nginx 2>/dev/null || true
+    chmod 755 /var/log/nginx /var/cache/nginx 2>/dev/null || true
+    
+    # Limpiar archivos PID existentes que puedan causar problemas
+    rm -f /run/nginx.pid /var/run/nginx.pid 2>/dev/null || true
+    
+    # Asegurar que /run tiene permisos correctos
+    chmod 755 /run /var/run 2>/dev/null || true
     
     log_progress "Habilitando Nginx..."
     systemctl enable nginx
     
     log_progress "Deteniendo Nginx si esta corriendo..."
     systemctl stop nginx 2>/dev/null || true
-    sleep 1
+    pkill -9 nginx 2>/dev/null || true
+    sleep 2
+    
+    # Limpiar archivos PID y locks
+    rm -f /run/nginx.pid /var/run/nginx.pid /var/run/nginx.lock /run/nginx.lock 2>/dev/null || true
+    
+    # Asegurar que nginx puede escribir en /run
+    # En algunos sistemas, /run es tmpfs y necesita permisos específicos
+    if [ -d "/run" ]; then
+        chmod 1777 /run 2>/dev/null || chmod 755 /run 2>/dev/null || true
+    fi
     
     log_progress "Iniciando Nginx..."
-    systemctl start nginx
+    # Intentar iniciar directamente primero para ver errores
+    if /usr/sbin/nginx -t 2>&1; then
+        systemctl start nginx
+    else
+        log_error "La configuracion de nginx tiene errores"
+        /usr/sbin/nginx -t
+        return 1
+    fi
     
     # Esperar un momento y verificar
     sleep 2
