@@ -20,21 +20,19 @@ RUN pnpm run build && \
     if [ -d dist/src ]; then cp -r dist/src/* dist/ && rm -rf dist/src; fi
 
 RUN if [ -f ormconfig.ts ]; then \
-        node -e "const ts = require('typescript'); const fs = require('fs'); const content = fs.readFileSync('ormconfig.ts', 'utf8'); const result = ts.transpile(content, {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2021, esModuleInterop: true, skipLibCheck: true, experimentalDecorators: true, emitDecoratorMetadata: true}); fs.writeFileSync('dist/ormconfig.js', result); let c = fs.readFileSync('dist/ormconfig.js', 'utf8'); c = c.replace(/from ['\"]src\//g, \"from './\"); c = c.replace(/'src\/\*\*/g, \"'dist/**\"); c = c.replace(/\"src\/\*\*/g, '\"dist/**'); fs.writeFileSync('dist/ormconfig.js', c);"; \
+        node -e "const ts = require('typescript'); const fs = require('fs'); const content = fs.readFileSync('ormconfig.ts', 'utf8'); const result = ts.transpile(content, {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2021, esModuleInterop: true, skipLibCheck: true, experimentalDecorators: true, emitDecoratorMetadata: true}); let fixed = result.replace(/require\(['\"]src\//g, \"require('./\").replace(/from ['\"]src\//g, \"from './\").replace(/'src\/\*\*/g, \"'dist/**\").replace(/\"src\/\*\*/g, '\"dist/**'); fs.writeFileSync('dist/ormconfig.js', fixed);"; \
     fi
 
 RUN if [ -f ormconfig.migration.ts ]; then \
-        node -e "const ts = require('typescript'); const fs = require('fs'); const content = fs.readFileSync('ormconfig.migration.ts', 'utf8'); const result = ts.transpile(content, {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2021, esModuleInterop: true, skipLibCheck: true, experimentalDecorators: true, emitDecoratorMetadata: true}); fs.writeFileSync('dist/ormconfig.migration.js', result); let c = fs.readFileSync('dist/ormconfig.migration.js', 'utf8'); c = c.replace(/from ['\"]src\//g, \"from './\"); c = c.replace(/'src\/\*\*/g, \"'dist/**\"); c = c.replace(/\"src\/\*\*/g, '\"dist/**'); fs.writeFileSync('dist/ormconfig.migration.js', c);"; \
+        node -e "const ts = require('typescript'); const fs = require('fs'); const content = fs.readFileSync('ormconfig.migration.ts', 'utf8'); const result = ts.transpile(content, {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2021, esModuleInterop: true, skipLibCheck: true, experimentalDecorators: true, emitDecoratorMetadata: true}); let fixed = result.replace(/require\(['\"]src\//g, \"require('./\").replace(/from ['\"]src\//g, \"from './\").replace(/'src\/\*\*/g, \"'dist/**\").replace(/\"src\/\*\*/g, '\"dist/**'); fs.writeFileSync('dist/ormconfig.migration.js', fixed);"; \
     fi
 
-RUN find dist -name "*.js" -type f | while read file; do \
-        sed -i \
-            -e "s/from ['\"]\.\.\/ormconfig['\"]/from '.\/ormconfig'/g" \
-            -e "s/from ['\"]ormconfig['\"]/from '.\/ormconfig'/g" \
-            -e "s/require(['\"]\.\.\/ormconfig['\"])/require('.\/ormconfig')/g" \
-            -e "s/require(['\"]ormconfig['\"])/require('.\/ormconfig')/g" \
-            "$file"; \
-    done
+RUN find dist -name "*.js" -type f -exec sed -i \
+    -e "s/from ['\"]\.\.\/ormconfig['\"]/from '.\/ormconfig'/g" \
+    -e "s/from ['\"]ormconfig['\"]/from '.\/ormconfig'/g" \
+    -e "s/require(['\"]\.\.\/ormconfig['\"])/require('.\/ormconfig')/g" \
+    -e "s/require(['\"]ormconfig['\"])/require('.\/ormconfig')/g" \
+    {} \;
 
 RUN pnpm prune --prod
 
