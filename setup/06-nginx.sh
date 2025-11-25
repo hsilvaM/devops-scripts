@@ -383,18 +383,112 @@ test_nginx_config() {
     fi
 }
 
+# Funcion para verificar si el puerto 80 esta en uso
+check_port_80() {
+    if command_exists netstat; then
+        if netstat -tuln | grep -q ":80 "; then
+            log_warn "El puerto 80 esta en uso"
+            netstat -tuln | grep ":80 " | head -3
+            return 1
+        fi
+    elif command_exists ss; then
+        if ss -tuln | grep -q ":80 "; then
+            log_warn "El puerto 80 esta en uso"
+            ss -tuln | grep ":80 " | head -3
+            return 1
+        fi
+    fi
+    return 0
+}
+
+# Funcion para crear nginx.conf si no existe
+create_nginx_conf() {
+    if [ -f "${NGINX_CONFIG_DIR}/nginx.conf" ]; then
+        return 0
+    fi
+    
+    log_progress "Creando configuracion principal de nginx..."
+    
+    cat > "${NGINX_CONFIG_DIR}/nginx.conf" << 'EOF'
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log /var/log/nginx/access.log main;
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    include /etc/nginx/conf.d/*.conf;
+}
+EOF
+
+    log_success "Configuracion principal de nginx creada"
+}
+
 # Funcion para iniciar y habilitar nginx
 start_nginx() {
-    log_progress "Iniciando y habilitando Nginx..."
+    log_progress "Verificando puerto 80..."
+    if ! check_port_80; then
+        log_warn "El puerto 80 esta en uso. Verificando si nginx ya esta corriendo..."
+        if systemctl is-active --quiet nginx; then
+            log_success "Nginx ya esta corriendo"
+            return 0
+        else
+            log_error "El puerto 80 esta en uso por otro proceso"
+            log_info "Deteniendo proceso que usa el puerto 80..."
+            if command_exists fuser; then
+                fuser -k 80/tcp 2>/dev/null || true
+                sleep 2
+            fi
+        fi
+    fi
     
+    log_progress "Creando configuracion principal si no existe..."
+    create_nginx_conf
+    
+    log_progress "Creando directorios necesarios..."
+    mkdir -p /var/log/nginx /var/cache/nginx /var/run
+    mkdir -p /etc/nginx/conf.d
+    
+    log_progress "Habilitando Nginx..."
     systemctl enable nginx
+    
+    log_progress "Deteniendo Nginx si esta corriendo..."
+    systemctl stop nginx 2>/dev/null || true
+    sleep 1
+    
+    log_progress "Iniciando Nginx..."
     systemctl start nginx
     
-    if [ $? -eq 0 ]; then
+    # Esperar un momento y verificar
+    sleep 2
+    
+    if systemctl is-active --quiet nginx; then
         log_success "Nginx iniciado correctamente"
         return 0
     else
         log_error "Error al iniciar Nginx"
+        log_info "Verificando logs de nginx..."
+        journalctl -u nginx.service --no-pager -n 20 2>/dev/null | tail -10 || true
+        log_info "Verificando estado del servicio..."
+        systemctl status nginx.service --no-pager -l 2>/dev/null | tail -15 || true
         return 1
     fi
 }
